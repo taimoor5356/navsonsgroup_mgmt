@@ -1,0 +1,101 @@
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+  <div class="app-brand demo">
+    <a href="#" class="app-brand-link">
+      <span class="app-brand-logo demo">
+        
+      </span>
+      <span class="app-brand-text menu-text fw-bolder ms-2" style="font-size: x-large;">NSG MGMT</span>
+    </a>
+
+    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+      <i class="bx bx-chevron-left bx-sm align-middle"></i>
+    </a>
+  </div>
+
+  <div class="menu-inner-shadow"></div>
+  @if(Auth::user()->hasRole('admin'))
+  <ul class="menu-inner py-1">
+    <!-- Dashboard -->
+    <li class="menu-item @if(Request::url() == url('admin/dashboard')) active @endif">
+      <a href="{{url('admin/dashboard')}}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-home-circle"></i>
+        <div data-i18n="Analytics">Dashboard</div>
+      </a>
+    </li>
+
+    <!-- Components -->
+    <li class="menu-header small text-uppercase"><span class="menu-header-text">Navsons Group</span></li>
+    <!-- Cards -->
+    <li class="menu-item @if(Request::url() == url('admin/groups') || Request::url() == url('admin/groups/create') || Request::segment(2) == 'groups') active @endif">
+      <a href="{{url('admin/users/customers')}}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-circle"></i>
+        <div data-i18n="Basic">Customers</div>
+      </a>
+    </li>
+    <li class="menu-item @if(Request::url() == url('admin/groups') || Request::url() == url('admin/groups/create') || Request::segment(2) == 'groups') active @endif">
+      <a href="{{url('admin/groups')}}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-circle"></i>
+        <div data-i18n="Basic">Expenses</div>
+      </a>
+    </li>
+    <li class="menu-item @if(Request::url() == url('admin/groups') || Request::url() == url('admin/groups/create') || Request::segment(2) == 'groups') active @endif">
+      <a href="{{url('admin/groups')}}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-circle"></i>
+        <div data-i18n="Basic">Inventory</div>
+      </a>
+    </li>
+    <li class="menu-item @if(Request::url() == url('admin/users') || Request::url() == url('admin/users/create') || Request::segment(2) == 'users') active @endif">
+      <a href="{{url('admin/users')}}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-circle"></i>
+        <div data-i18n="Basic">Users</div>
+      </a>
+    </li>
+    <li class="menu-item @if(Request::url() == url('admin/previous-payments') || Request::url() == url('admin/previous-payments/create') || Request::segment(2) == 'previous-payments') active @endif">
+      <a href="{{url('admin/previous-payments')}}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-circle"></i>
+        <div data-i18n="Basic">Payments</div>
+      </a>
+    </li>
+    <!-- <li class="menu-item @if(Request::url() == url('admin/files') || Request::url() == url('admin/files/create') || Request::segment(2) == 'files') active @endif">
+      <a href="{{url('admin/files')}}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-file"></i>
+        <div data-i18n="Basic">Files</div>
+      </a>
+    </li> -->
+
+    <!-- Forms & Tables -->
+    <li class="menu-header small text-uppercase"><span class="menu-header-text">Access Control List (ACL)</span></li>
+    <!-- Forms -->
+    <li class="menu-item">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-lock"></i>
+        <div data-i18n="Form Elements">ACL</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item">
+          <a href="{{url('admin/acl/roles')}}" class="menu-link">
+            <div data-i18n="Basic Inputs">Roles</div>
+          </a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+  @endif
+  @if(Auth::user()->user_type == 2 || Auth::user()->user_type == 3)
+  <ul class="menu-inner py-1">
+    <!-- Dashboard -->
+    <li class="menu-item @if(Request::url() == url('customer/dashboard')) active @endif">
+      <a href="{{url('customer/dashboard')}}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-home-circle"></i>
+        <div data-i18n="Analytics">Dashboard</div>
+      </a>
+    </li>
+    <li class="menu-item @if(Request::url() == url('customer/total-collection-report') || Request::url() == url('customer/total-worked-rvus-report') || Request::url() == url('customer/insurance-statuses-report') || Request::url() == url('customer/insurance-receivable-details-report') || Request::url() == url('customer/patient-receivable-details-report') || Request::url() == url('customer/patient-statuses-report')) active @endif">
+      <a href="{{url('customer/total-collection-report')}}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-file"></i>
+        <div data-i18n="Basic">Detailed Report</div>
+      </a>
+    </li>
+  </ul>
+  @endif
+</aside>
