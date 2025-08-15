@@ -8,26 +8,26 @@
     <div class="row">
         <div class="col-12 d-flex justify-content-between">
             <div class="breadcrumb-list">
-                <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Groups /</span> List</h4>
+                <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">{{$header_title}}</span></h4>
             </div>
             <div class="butns">
-                <a href="{{url('admin/groups/create')}}" class="btn btn-primary">Add New</a>
+                <a href="{{url('admin/expenses/create')}}" class="btn btn-primary">Add New</a>
                 <a href="#" class="btn btn-danger">Trashed</a>
             </div>
         </div>
     </div>
     <!-- Responsive Table -->
     <div class="card">
-        <h5 class="card-header">Groups</h5>
+        <h5 class="card-header">{{$header_title}}</h5>
         <div class="card-body">
             <div class="table-responsive text-nowrap">
                 <table class="table data-table display responsive nowrap" width="100%">
                     <thead>
                         <tr class="text-nowrap">
                             <th>#</th>
+                            <th>Expense Type</th>
                             <th>Name</th>
-                            <th>Address</th>
-                            <th>Phone</th>
+                            <th>Total Expense</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -55,23 +55,23 @@ $(document).ready(function() {
             serverSide: true,
             scrollX: true,
             ajax: {
-                url: "{{url('admin/groups')}}",
+                url: "{{url('admin/expenses')}}",
             },
             columns: [{
                     name: 'sr_no',
                     data: 'sr_no'
                 },
                 {
+                    name: 'expense_type',
+                    data: 'expense_type'
+                },
+                {
                     name: 'name',
                     data: 'name'
                 },
                 {
-                    name: 'address',
-                    data: 'address'
-                },
-                {
-                    name: 'phone',
-                    data: 'phone'
+                    name: 'expense_amount',
+                    data: 'expense_amount'
                 },
                 {
                     className: 'text-center',

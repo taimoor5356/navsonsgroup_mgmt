@@ -8,14 +8,14 @@
     @include('_messages')
     <div class="row">
         <div class="col-xl">
-            <form method="POST" action="{{url('admin/groups/update', [$record->id])}}">
+            <form method="POST" action="{{url('admin/expenses/update', [$record->id])}}">
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Edit Group</h5>
                     </div>
                     <div class="card-body">
                             @csrf
-                            @include('admin.groups._form')
+                            @include('admin.expenses._form')
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary">Submit</button>

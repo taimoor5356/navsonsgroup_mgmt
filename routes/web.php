@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DetailedReportController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PreviousPaymentController;
@@ -58,7 +59,20 @@ Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
             Route::get('/{customers}/restore/{id}', [UserController::class, 'restore'])->name('admin.users.restore');
             Route::post('/{customers}/export', [UserController::class, 'export'])->name('admin.users.export');
         });
-        
+        //Expenses Routes
+        Route::group(['prefix' => '/expenses'], function () {
+            Route::get('/', [ExpenseController::class, 'index'])->name('admin.expenses.list');
+            Route::get('/create', [ExpenseController::class, 'create'])->name('admin.expenses.create');
+            Route::post('/store', [ExpenseController::class, 'store'])->name('admin.expenses.store');
+            Route::get('/customers/edit/{id}', [ExpenseController::class, 'edit'])->name('admin.expenses.edit');
+            Route::post('/update/{id}', [ExpenseController::class, 'update'])->name('admin.expenses.update');
+            Route::post('/delete', [ExpenseController::class, 'destroy'])->name('admin.expenses.destroy');
+
+            Route::post('/delete-multiple-expenses', [ExpenseController::class, 'deleteMultipleexpenses'])->name('delete_multiple_expenses');
+            Route::get('/trashed', [ExpenseController::class, 'trashed'])->name('admin.expenses.trashed');
+            Route::get('/restore/{id}', [ExpenseController::class, 'restore'])->name('admin.expenses.restore');
+            Route::post('/export', [ExpenseController::class, 'export'])->name('admin.expenses.export');
+        });
         //ACL Routes
         Route::group(['prefix' => '/acl'], function () {
             Route::get('/roles/{status?}', [AclController::class, 'index'])->name('admin.acl.roles');

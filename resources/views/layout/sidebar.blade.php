@@ -32,8 +32,8 @@
         <div data-i18n="Basic">Customers</div>
       </a>
     </li>
-    <li class="menu-item @if(Request::url() == url('admin/groups') || Request::url() == url('admin/groups/create') || Request::segment(2) == 'groups') active @endif">
-      <a href="{{url('admin/groups')}}" class="menu-link">
+    <li class="menu-item @if(Request::url() == url('admin/expenses') || Request::url() == url('admin/expenses/create') || Request::segment(2) == 'expenses') active @endif">
+      <a href="{{url('admin/expenses')}}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-circle"></i>
         <div data-i18n="Basic">Expenses</div>
       </a>

@@ -14,10 +14,10 @@ use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
-use DataTables;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use DataTables;
 
 class UserController extends Controller
 {
@@ -184,6 +184,7 @@ class UserController extends Controller
                 'discount' => $request->discount ?? 0,
                 'discount_reason' => $request->discount_reason ?? null,
                 'collected_amount' => $request->collected_amount ?? 0,
+                'payment_mode_id' => $request->payment_mode_id ?? 0,
             ]);
 
             DB::commit();

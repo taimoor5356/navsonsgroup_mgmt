@@ -87,6 +87,21 @@
             <input type="number" name="collected_amount" value="{{isset($record) ? $record->vehicles?->first()->service?->collected_amount : ''}}" id="collected-amount" class="form-control" placeholder="Enter Amount Collected/Transferred" aria-label="1000" aria-describedby="collected-amount2">
         </div>
     </div>
+    <div class="mb-3 col-md-6 col-12">
+        <label class="form-label d-flex justify-content-between align-items-center" for="payment-type">
+            <div>
+                Payment Mode
+            </div>
+        </label>
+        <div class="input-group input-group-merge">
+            <select name="payment_mode_id" id="payment_mode_id" class="form-control">
+                <option value="" selected disabled>Payment Mode</option>
+                @foreach (\App\Models\PaymentMode::get() as $paymentMode)
+                    <option value="{{$paymentMode->id}}">{{strtoupper(str_replace('_', ' ', $paymentMode->name))}}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
     <div class="col-12 customer-info">
         <div class="row">
             <div class="mb-3 col-md-6 col-12">

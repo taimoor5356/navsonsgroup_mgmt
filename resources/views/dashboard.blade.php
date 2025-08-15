@@ -33,8 +33,67 @@
     </div>
     <div class="row">
         <div class="col-lg-12 col-md-12 order-1">
+            <div>
+                <h6>This Month</h6>
+            </div>
             <div class="row">
-                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-success"></i> Total Sale</span>
+                            <h3 class="card-title text-nowrap mb-2">Rs {{!empty($salesSummary) ? number_format($salesSummary->total_sales, 2) : 0}}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Expenses</span>
+                            <h3 class="card-title text-nowrap mb-2">Rs {{!empty($expensesSummary) ? number_format($expensesSummary->total_expenses, 2) : 0}}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-warning"></i> Total Payment Received</span>
+                            <h3 class="card-title text-nowrap mb-2">Rs {{!empty($expensesSummary) ? number_format(($salesSummary->total_sales - $expensesSummary->total_expenses), 2) : 0}}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-primary"></i> Online Payment Received</span>
+                            <h3 class="card-title text-nowrap mb-2">Rs {{!empty($salesSummary) ? number_format(($salesSummary->total_online_payment_received), 2) : 0}}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Cash Expense</span>
+                            <h3 class="card-title text-nowrap mb-2">Rs {{!empty($expensesSummary) ? number_format(($expensesSummary->total_cash_expenses), 2) : 0}}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Online Expense</span>
+                            <h3 class="card-title text-nowrap mb-2">Rs {{!empty($expensesSummary) ? number_format(($expensesSummary->total_online_expenses), 2) : 0}}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Discounts</span>
+                            <h3 class="card-title text-nowrap mb-2">{{!empty($salesSummary) ? number_format($salesSummary->total_discounts) : 0}}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
                     <div class="card">
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-car text-primary"></i> Total Car Washed</span>
@@ -42,27 +101,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
                     <div class="card">
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-group text-info"></i> Customers</span>
                             <h3 class="card-title text-nowrap mb-2">{{!empty($totalNoOfCustomers) ? number_format($totalNoOfCustomers) : 0}}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-success"></i> Total Payment <small>(This month)</small></span>
-                            <h3 class="card-title text-nowrap mb-2">Rs {{!empty($totalPayments) ? number_format($totalPayments, 2) : 0}}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Expenses <small>(This month)</small></span>
-                            <h3 class="card-title text-nowrap mb-2">Rs {{!empty($totalExpenses) ? $totalExpenses : 0}}</h3>
                         </div>
                     </div>
                 </div>

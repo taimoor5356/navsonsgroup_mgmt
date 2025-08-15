@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('discount')->default(0);
             $table->string('discount_reason')->nullable();
             $table->integer('collected_amount')->default(0);
+            $table->tinyInteger('payment_mode_id')->nullable();
             $table->string('deleted_at')->nullable();
             $table->timestamps();
         });
