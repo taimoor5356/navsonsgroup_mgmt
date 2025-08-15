@@ -21,8 +21,6 @@
             </div>
             <div class="butns">
                 <a href="{{url('admin/users/customers/create')}}" class="btn btn-primary ms-2">Add New</a>
-                <a href="#" class="btn btn-warning ms-2" id="delete-selected-users">Delete</a>
-                <a href="{{url('admin/users/trashed')}}" class="btn btn-danger ms-2"ms-2>Trashed</a>
             </div>
         </div>
     </div>
