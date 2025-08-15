@@ -143,10 +143,10 @@ class UserController extends Controller
                 if (!$vehicle->user_id) {
                     if (!$user) {
                         $user = User::create([
-                            'name' => !empty($request->customer_name) ? $request->customer_name : 'new_user',
+                            'name' => !empty($request->customer_name) ? strtolower($request->customer_name) : 'new_user',
                             'email' => !empty($request->customer_email) ? $request->customer_email : (!empty($request->customer_name) ? $request->customer_name.'@test.com' : 'new_user'.$vehicleRegNo.'@test.com'),
                             'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
-                            'address' => !empty($request->customer_address) ? $request->customer_address : null,
+                            'address' => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
                             'user_type' => 3,
                             'is_active' => 1,
                             'password' => Hash::make('12345678'),
@@ -158,19 +158,19 @@ class UserController extends Controller
             } else {
                 // Vehicle does not exist, create user and vehicle
                 $user = User::create([
-                    'name' => !empty($request->customer_name) ? $request->customer_name : 'new_user',
+                    'name' => !empty($request->customer_name) ? strtolower($request->customer_name) : 'new_user',
                     'email' => !empty($request->customer_email) ? $request->customer_email : 'new_user_' . $vehicleRegNo . '@test.com',
                     'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
-                    'address' => !empty($request->customer_address) ? $request->customer_address : null,
+                    'address' => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
                     'user_type' => 3,
                     'is_active' => 1,
                     'password' => Hash::make('12345678'),
                 ]);
                 $user->assignRole('customer');
                 $vehicle = Vehicle::create([
-                    'name' => $request->vehicle_name,
+                    'name' => strtolower($request->vehicle_name),
                     'user_id' => $user->id,
-                    'registration_number' => $vehicleRegNo,
+                    'registration_number' => strtolower($vehicleRegNo),
                 ]);
             }
 
@@ -182,7 +182,7 @@ class UserController extends Controller
                 'polish' => $request->filled('polish') ? 1 : 0,
                 'charges' => $request->charges ?? 0,
                 'discount' => $request->discount ?? 0,
-                'discount_reason' => $request->discount_reason ?? null,
+                'discount_reason' => strtolower($request->discount_reason) ?? null,
                 'collected_amount' => $request->collected_amount ?? 0,
                 'payment_mode_id' => $request->payment_mode_id ?? 0,
             ]);
