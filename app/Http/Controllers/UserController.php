@@ -5,13 +5,17 @@ namespace App\Http\Controllers;
 use App\Exports\UserExport;
 use App\Jobs\SyncUsersJob;
 use App\Models\Billing;
+use App\Models\ErrorLog;
+use App\Models\Service;
 use App\Models\User;
 use App\Models\UserGroup;
 use App\Models\UserHasGroup;
+use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use DataTables;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -43,19 +47,25 @@ class UserController extends Controller
                 return '<input type="checkbox" data-user-id="'.$row->id.'" class="user-checkbox">';
             })
             ->addColumn('name', function ($row) {
-                return ucwords($row->name);
+                return ucwords(str_replace('_', ' ', $row->name));
+            })
+            ->addColumn('vehicle_name', function ($row) {
+                return ucwords($row->vehicles?->first()->name);
+            })
+            ->addColumn('vehicle_registration_number', function ($row) {
+                return strtoupper($row->vehicles?->first()->registration_number);
             })
             ->addColumn('email', function ($row) {
                 return $row->email;
             })
-            ->addColumn('role', function ($row) {
-                return $row->role?->name;
+            ->addColumn('phone', function ($row) {
+                return $row->phone;
             })
             ->addColumn('actions', function ($row) use ($trashed) {
                 $btns = '
                     <div class="actionb-btns-menu d-flex justify-content-center">';
                     if ($trashed == null) {
-                        $btns .= '<a class="btn btns m-0 p-1" data-user-id="'.$row->id.'" href="users/edit/'.$row->id.'">
+                        $btns .= '<a class="btn btns m-0 p-1" data-user-id="'.$row->id.'" href="customers/edit/'.$row->id.'">
                                 <i class="align-middle text-primary" data-feather="edit">
                                 </i>
                             </a>
@@ -85,10 +95,12 @@ class UserController extends Controller
     public function index(Request $request, $type)
     {
         //
-        $data['header_title'] = 'Users List';
+        $data['header_title'] = ucfirst($type). ' List';
         $data['userType'] = $type;
         if ($request->ajax()) {
-            $data['records'] = User::with('role')->customer()->orderBy('id', 'desc');
+            $data['records'] = User::with('role', 'vehicles')
+                                ->when($type == 'customers', fn($q) => $q->customer())
+                                ->orderBy('id', 'desc');
             return $this->datatables($request, $data);
         }
         return view('admin.users.index', $data);
@@ -97,13 +109,12 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create($type)
     {
         //
         $data['header_title'] = 'Add New';
+        $data['userType'] = $type;
         $data['roles'] = Role::get();
-        $data['groups'] = UserGroup::get();
-        $data['billings'] = Billing::select('provider_npi')->groupBy('provider_npi')->get();
         return view('admin.users.create', $data);
     }
 
@@ -112,44 +123,78 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
-        request()->validate([
-            'name' => 'required|string',
-            'email' => 'required|email',
-            'password' => 'required|string',
-            'role_id' => 'required'
+        $request->validate([
+            // 'vehicle_name' => 'required|string',
+            'vehicle_registration_number' => 'required|string',
+            'service_type' => 'required|integer',
+            'charges' => 'required|integer'
         ]);
-        if (!User::where('email', '=', $request->email)->exists()) {
-            if (!empty($request->group_id)) {
-                if (User::where('provider_npi', '=', $request->provider_npi)->exists()) {
-                    return redirect()->back()->with('error', 'NPI number already assigned');
+
+        DB::beginTransaction();
+
+        try {
+            $vehicleRegNo = $request->vehicle_registration_number;
+            $vehicle = Vehicle::where('registration_number', $vehicleRegNo)->first();
+            $user = null;
+            if ($vehicle) {
+                // Vehicle exists
+                // Vehicle has no user assigned, try to find user by email
+                $user = User::where('id', $vehicle->user_id)->first();
+                if (!$vehicle->user_id) {
+                    if (!$user) {
+                        $user = User::create([
+                            'name' => !empty($request->customer_name) ? $request->customer_name : 'new_user',
+                            'email' => !empty($request->customer_email) ? $request->customer_email : (!empty($request->customer_name) ? $request->customer_name.'@test.com' : 'new_user'.$vehicleRegNo.'@test.com'),
+                            'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
+                            'address' => !empty($request->customer_address) ? $request->customer_address : null,
+                            'user_type' => 3,
+                            'is_active' => 1,
+                            'password' => Hash::make('12345678'),
+                        ]);
+                    }
+                    $vehicle->update(['user_id' => $user->id]);
                 }
-                $user = new User();
-                $user->name = $request->name;
-                $user->email = $request->email;
-                $user->password =  Hash::make($request->password);
-                $user->user_type = $request->role_id;
-                $user->provider_npi = $request->provider_npi;
-                $user->manual_provider_npi = !empty($request->manual_provider_npi) ? 1 : 0;
-                $user->save();
-                $billings = Billing::where('provider_npi', $user->provider_npi)->get();
-                foreach ($billings as $billing) {
-                    $billing->user_id = $user->id;
-                    $billing->save();
-                }
-                $role = Role::find($request->role_id);
-                $user->assignRole($role);
-                $groupIds = $request->group_id;
-                foreach ($groupIds as $groupId) {
-                    $userHasGroups = new UserHasGroup();
-                    $userHasGroups->user_id = $user->id;
-                    $userHasGroups->group_id = $groupId;
-                    $userHasGroups->save();
-                }
-                return redirect('admin/users')->with('success', 'User added successfully');
+                $user->assignRole('customer');
+            } else {
+                // Vehicle does not exist, create user and vehicle
+                $user = User::create([
+                    'name' => !empty($request->customer_name) ? $request->customer_name : 'new_user',
+                    'email' => !empty($request->customer_email) ? $request->customer_email : 'new_user_' . $vehicleRegNo . '@test.com',
+                    'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
+                    'address' => !empty($request->customer_address) ? $request->customer_address : null,
+                    'user_type' => 3,
+                    'is_active' => 1,
+                    'password' => Hash::make('12345678'),
+                ]);
+                $user->assignRole('customer');
+                $vehicle = Vehicle::create([
+                    'name' => $request->vehicle_name,
+                    'user_id' => $user->id,
+                    'registration_number' => $vehicleRegNo,
+                ]);
             }
-        } else {
-            return redirect()->back()->with('error', 'Email already exists');
+
+            // Always create car wash service entry
+            Service::create([
+                'vehicle_id' => $vehicle->id,
+                'service_type_id' => $request->service_type,
+                'diesel' => $request->filled('diesel') ? 1 : 0,
+                'polish' => $request->filled('polish') ? 1 : 0,
+                'charges' => $request->charges ?? 0,
+                'discount' => $request->discount ?? 0,
+                'discount_reason' => $request->discount_reason ?? null,
+                'collected_amount' => $request->collected_amount ?? 0,
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Entry added successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            ErrorLog::create([
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->back()->with('error', 'Something went wrong');
         }
     }
 
@@ -168,10 +213,7 @@ class UserController extends Controller
     {
         //
         $data['header_title'] = 'Edit User Details';
-        $data['roles'] = Role::get();
-        $data['groups'] = UserGroup::get();
-        $data['record'] = User::with('billings')->find($id);
-        $data['billings'] = Billing::select('provider_npi')->groupBy('provider_npi')->get();
+        $data['record'] = User::with('vehicles.service')->where('id', $id)->first();
         return view('admin.users.edit', $data);
     }
 

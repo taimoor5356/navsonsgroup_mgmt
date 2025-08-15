@@ -10,6 +10,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PreviousPaymentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserGroupController;
+use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,8 @@ Route::get('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/register', [AuthController::class, 'postRegister'])->name('post_register');
 Route::get('/logout', [AuthController::class, 'logout'])->name('postlogout');
 
+Route::post('search-vehicle', [VehicleController::class, 'searchVehicleByNumber'])->name('search_vehicle_by_number');
+
 Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
         
     //Admin Routes
@@ -44,17 +47,16 @@ Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
         //Users Routes
         Route::group(['prefix' => '/users'], function () {
             Route::get('/{customers}', [UserController::class, 'index'])->name('admin.users.list');
-            Route::get('/create', [UserController::class, 'create'])->name('admin.users.create');
-            Route::post('/store', [UserController::class, 'store'])->name('admin.users.store');
-            Route::get('/edit/{id}', [UserController::class, 'edit'])->name('admin.users.edit');
-            Route::post('/update/{id}', [UserController::class, 'update'])->name('admin.users.update');
-            Route::post('/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
-            Route::get('/sync', [UserController::class, 'sync'])->name('admin.users.sync');
+            Route::get('/{customers}/create', [UserController::class, 'create'])->name('admin.users.create');
+            Route::post('/{customers}/store', [UserController::class, 'store'])->name('admin.users.store');
+            Route::get('/customers/edit/{id}', [UserController::class, 'edit'])->name('admin.users.edit');
+            Route::post('/{customers}/update/{id}', [UserController::class, 'update'])->name('admin.users.update');
+            Route::post('/{customers}/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
 
-            Route::post('/delete-multiple-users', [UserController::class, 'deleteMultipleUsers'])->name('delete_multiple_users');
-            Route::get('/trashed', [UserController::class, 'trashed'])->name('admin.users.trashed');
-            Route::get('/restore/{id}', [UserController::class, 'restore'])->name('admin.users.restore');
-            Route::post('/export', [UserController::class, 'export'])->name('admin.users.export');
+            Route::post('/{customers}/delete-multiple-users', [UserController::class, 'deleteMultipleUsers'])->name('delete_multiple_users');
+            Route::get('/{customers}/trashed', [UserController::class, 'trashed'])->name('admin.users.trashed');
+            Route::get('/{customers}/restore/{id}', [UserController::class, 'restore'])->name('admin.users.restore');
+            Route::post('/{customers}/export', [UserController::class, 'export'])->name('admin.users.export');
         });
         
         //ACL Routes

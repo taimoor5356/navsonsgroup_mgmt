@@ -26,7 +26,7 @@
     <!-- Components -->
     <li class="menu-header small text-uppercase"><span class="menu-header-text">Navsons Group</span></li>
     <!-- Cards -->
-    <li class="menu-item @if(Request::url() == url('admin/groups') || Request::url() == url('admin/groups/create') || Request::segment(2) == 'groups') active @endif">
+    <li class="menu-item @if(Request::url() == url('admin/users/customers') || Request::url() == url('admin/users/customers/create')) active @endif">
       <a href="{{url('admin/users/customers')}}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-circle"></i>
         <div data-i18n="Basic">Customers</div>
@@ -44,7 +44,7 @@
         <div data-i18n="Basic">Inventory</div>
       </a>
     </li>
-    <li class="menu-item @if(Request::url() == url('admin/users') || Request::url() == url('admin/users/create') || Request::segment(2) == 'users') active @endif">
+    <li class="menu-item @if(Request::url() == url('admin/users') || Request::url() == url('admin/users/create')) active @endif">
       <a href="{{url('admin/users')}}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-circle"></i>
         <div data-i18n="Basic">Users</div>

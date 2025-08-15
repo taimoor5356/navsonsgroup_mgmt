@@ -17,23 +17,18 @@
     <div class="row">
         <div class="col-12 d-flex justify-content-between">
             <div class="breadcrumb-list">
-                <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Users /</span> List</h4>
+                <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">{{$header_title}}</span></h4>
             </div>
             <div class="butns">
-                <a href="{{url('admin/users/create')}}" class="btn btn-primary ms-2">Add New</a>
-                <!-- <a href="{{url('admin/users/sync')}}" class="btn btn-success">Sync</a> -->
+                <a href="{{url('admin/users/customers/create')}}" class="btn btn-primary ms-2">Add New</a>
                 <a href="#" class="btn btn-warning ms-2" id="delete-selected-users">Delete</a>
                 <a href="{{url('admin/users/trashed')}}" class="btn btn-danger ms-2"ms-2>Trashed</a>
-                <form action="{{url('admin/users/export')}}" class="d-flex justify-content-end my-2 ms-2" method="POST" id="export-excel-form">
-                    @csrf
-                    <input type="submit" class="btn btn-success" id="export-excel" value="Export">
-                </form>
             </div>
         </div>
     </div>
     <!-- Responsive Table -->
     <div class="card">
-        <h5 class="card-header">Users</h5>
+        <h5 class="card-header">{{$header_title}}</h5>
         <div class="card-body">
             <div class="table-responsive text-nowrap">
                 <table class="table data-table display responsive nowrap" width="100%">
@@ -42,8 +37,9 @@
                             <th>#</th>
                             <th><input type="checkbox" id="check-all"></th>
                             <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
+                            <th>Vehicle</th>
+                            <th>Vehicle Registration Number</th>
+                            <th>Phone</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -92,12 +88,16 @@
                             data: 'name'
                         },
                         {
-                            name: 'email',
-                            data: 'email'
+                            name: 'vehicle_name',
+                            data: 'vehicle_name'
                         },
                         {
-                            name: 'role',
-                            data: 'role'
+                            name: 'vehicle_registration_number',
+                            data: 'vehicle_registration_number'
+                        },
+                        {
+                            name: 'phone',
+                            data: 'phone'
                         },
                         {
                             className: 'text-center',
@@ -141,107 +141,6 @@
                     if (checkedRemaining === 0) {
                         $('#delete-selected-users').addClass('disabled');
                     }
-                }
-            });
-
-            $(document).on('click', '#delete-selected-users', function () {
-                var selectedUsers = [];
-                $('.user-checkbox:checked').each(function() {
-                    selectedUsers.push($(this).attr('data-user-id'));
-                });
-                if (selectedUsers.length > 0) {
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        title: 'Are you sure to DELETE?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: 'green',
-                        confirmButtonText: 'Yes, delete it!',
-                        cancelButtonText: 'No, cancel!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.ajax({
-                                url: "{{route('delete_multiple_users')}}",
-                                method: 'POST',
-                                data: {
-                                    _token: "{{csrf_token()}}",
-                                    user_ids: selectedUsers 
-                                },
-                                success: function(response) {
-                                    if (response.status) {
-                                        Swal.fire(
-                                            'Deleted!',
-                                            response.message,
-                                            'success'
-                                        );
-                                        table.draw(false);
-                                    } else {
-                                        Swal.fire(
-                                            'Failed!',
-                                            'Failed to delete selected users.',
-                                            'error'
-                                        );
-                                    }
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    Swal.fire(
-                        'No user selected',
-                        'Please select at least one user to delete.',
-                        'info'
-                    );
-                }
-            });
-
-            $(document).on('click', '.delete-user', function () {
-                var selectedUser = $(this).attr('data-user-id');
-                if (selectedUser.length > 0) {
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        title: 'Are you sure to DELETE?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: 'green',
-                        confirmButtonText: 'Yes, delete it!',
-                        cancelButtonText: 'No, cancel!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.ajax({
-                                url: "{{route('admin.users.destroy')}}",
-                                method: 'POST',
-                                data: {
-                                    _token: "{{csrf_token()}}",
-                                    user_id: selectedUser 
-                                },
-                                success: function(response) {
-                                    if (response.status) {
-                                        Swal.fire(
-                                            'Deleted!',
-                                            response.message,
-                                            'success'
-                                        );
-                                        table.draw(false);
-                                    } else {
-                                        Swal.fire(
-                                            'Failed!',
-                                            response.message,
-                                            'error'
-                                        );
-                                    }
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    Swal.fire(
-                        'No user selected',
-                        'Please select at least one user to delete.',
-                        'info'
-                    );
                 }
             });
         });
