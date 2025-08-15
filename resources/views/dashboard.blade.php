@@ -120,68 +120,6 @@
 <script>
     $(document).ready(function() {
         $('select').select2();
-        {{--
-        // $(document).on('change', '#group_id', function() {
-        //     var url = "{{route('filter_all_data')}}";
-        //     $.ajax({
-        //         url: url,
-        //         type: 'POST',
-        //         data: {
-        //             _token: "{{csrf_token()}}",
-        //             group_id: $('#group_id').val(),
-        //             provider_npi: '',
-        //             location: '',
-        //         },
-        //         success: function(response) {
-        //             if (response.status == true) {
-        //                 $('#provider_npi').html(response.customers);
-        //                 $('#location').html(response.locations);
-        //                 $('#mrn_number').html(response.mrn_numbers);
-        //             }
-        //         }
-        //     });
-        // });
-
-        // $(document).on('change', '#provider_npi', function() {
-        //     var url = "{{route('filter_all_data')}}";
-        //     $.ajax({
-        //         url: url,
-        //         type: 'POST',
-        //         data: {
-        //             _token: "{{csrf_token()}}",
-        //             group_id: $('#group_id').val(),
-        //             provider_npi: $('#provider_npi').val(),
-        //             location: '',
-        //         },
-        //         success: function(response) {
-        //             if (response.status == true) {
-        //                 $('#location').html(response.locations);
-        //                 $('#mrn_number').html(response.mrn_numbers);
-        //             }
-        //         }
-        //     });
-        // });
-
-        // $(document).on('change', '#location', function() {
-        //     var url = "{{route('filter_all_data')}}";
-        //     $.ajax({
-        //         url: url,
-        //         type: 'POST',
-        //         data: {
-        //             _token: "{{csrf_token()}}",
-        //             group_id: '',
-        //             provider_npi: $('#provider_npi').val(),
-        //             location: $('#location').val(),
-        //         },
-        //         success: function(response) {
-        //             if (response.status == true) {
-        //                 $('#mrn_number').html(response.mrn_numbers);
-        //             }
-        //         }
-        //     });
-        // });
-        --}}
-
     });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
