@@ -1,6 +1,13 @@
 @extends('layout.app')
 @section('_styles')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<!-- Moment.js (required for formatting) -->
+<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+
+<!-- Date Range Picker CSS + JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
 <style type="text/css">
     .select2-container .select2-selection--single {
         display: block;
@@ -33,8 +40,27 @@
     </div>
     <div class="row">
         <div class="col-lg-12 col-md-12 order-1">
-            <div>
-                <h6>This Month</h6>
+            <div class="mb-4">
+                <form action="{{ route('admin.dashboard') }}" method="GET">
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <label for="dateRangePicker">Filter Date</label>
+                            <input 
+    type="text" 
+    name="date_range" 
+    id="dateRangePicker" 
+    class="form-control" 
+    placeholder="Select Date Range"
+    value="{{ request('date_range') }}"
+>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <input type="submit" class="btn btn-primary">
+                        </div>
+                    </div>
+                </form>
             </div>
             <div class="row">
                 <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
@@ -120,6 +146,25 @@
 <script>
     $(document).ready(function() {
         $('select').select2();
+        $(function() {
+            $('#dateRangePicker').daterangepicker({
+                autoUpdateInput: false,     // don’t fill until user selects
+                locale: {
+                    cancelLabel: 'Clear',
+                    format: 'YYYY-MM-DD'    // format for backend
+                }
+            });
+
+            // Set the selected value into the input
+            $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+            });
+
+            // Clear on cancel
+            $('#dateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+            });
+        });
     });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>

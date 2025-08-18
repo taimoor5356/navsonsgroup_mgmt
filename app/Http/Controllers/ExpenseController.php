@@ -38,25 +38,28 @@ class ExpenseController extends Controller
             ->addColumn('expense_amount', function ($row) {
                 return $row->amount;
             })
+            ->addColumn('description', function ($row) {
+                return $row->description;
+            })
             ->addColumn('actions', function ($row) use ($trashed) {
                 $btns = '
                     <div class="actionb-btns-menu d-flex justify-content-center">';
                     if ($trashed == null) {
-                        $btns .= '<a class="btn btns m-0 p-1" data-user-id="'.$row->id.'" href="expenses/edit/'.$row->id.'">
-                                <i class="align-middle text-primary" data-feather="edit">
-                                </i>
-                            </a>
-                            <a class="btn btns m-0 p-1 delete-user" data-user-id="'.$row->id.'" href="#">
-                                <i class="align-middle text-danger" data-feather="trash-2">
-                                </i>
-                            </a>
-                        </div>';
+                        // $btns .= '<a class="btn btns m-0 p-1" data-user-id="'.$row->id.'" href="expenses/edit/'.$row->id.'">
+                        //         <i class="align-middle text-primary" data-feather="edit">
+                        //         </i>
+                        //     </a>
+                        //     <a class="btn btns m-0 p-1 delete-user" data-user-id="'.$row->id.'" href="#">
+                        //         <i class="align-middle text-danger" data-feather="trash-2">
+                        //         </i>
+                        //     </a>
+                        // </div>';
                     } else {
-                        $btns.= '<a class="btn btns m-0 p-1" href="restore/' . $row->id . '">
-                                <i class="align-middle text-success" data-feather="refresh-cw">
-                                </i>
-                            </a>
-                        </div>';
+                        // $btns.= '<a class="btn btns m-0 p-1" href="restore/' . $row->id . '">
+                        //         <i class="align-middle text-success" data-feather="refresh-cw">
+                        //         </i>
+                        //     </a>
+                        // </div>';
                     }
                 return $btns;
             })
@@ -118,7 +121,7 @@ class ExpenseController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', 'Entry added successfully');
+            return redirect()->route('admin.expenses.list')->with('success', 'Entry added successfully');
         } catch (\Exception $e) {
             DB::rollBack();
             ErrorLog::create([

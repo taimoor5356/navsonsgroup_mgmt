@@ -9,6 +9,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PreviousPaymentController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserGroupController;
 use App\Http\Controllers\VehicleController;
@@ -44,24 +45,41 @@ Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
     Route::group(['prefix' => 'admin'], function () {
 
         //Dashboard Routes
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/dashboard/{date?}', [DashboardController::class, 'index'])->name('admin.dashboard');
         //Users Routes
         Route::group(['prefix' => '/users'], function () {
-            Route::get('/{customers}', [UserController::class, 'index'])->name('admin.users.list');
-            Route::get('/{customers}/create', [UserController::class, 'create'])->name('admin.users.create');
-            Route::post('/{customers}/store', [UserController::class, 'store'])->name('admin.users.store');
-            Route::get('/customers/edit/{id}', [UserController::class, 'edit'])->name('admin.users.edit');
-            Route::post('/{customers}/update/{id}', [UserController::class, 'update'])->name('admin.users.update');
-            Route::post('/{customers}/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
+            Route::get('/list/{type?}', [UserController::class, 'index'])->name('admin.users.list');
+            Route::get('/create', [UserController::class, 'create'])->name('admin.users.create');
+            Route::post('/store', [UserController::class, 'store'])->name('admin.users.store');
+            Route::get('/edit/{id}', [UserController::class, 'edit'])->name('admin.users.edit');
+            Route::post('/update/{id}', [UserController::class, 'update'])->name('admin.users.update');
+            Route::post('/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
 
-            Route::post('/{customers}/delete-multiple-users', [UserController::class, 'deleteMultipleUsers'])->name('delete_multiple_users');
-            Route::get('/{customers}/trashed', [UserController::class, 'trashed'])->name('admin.users.trashed');
-            Route::get('/{customers}/restore/{id}', [UserController::class, 'restore'])->name('admin.users.restore');
-            Route::post('/{customers}/export', [UserController::class, 'export'])->name('admin.users.export');
+            Route::post('/delete-multiple-users', [UserController::class, 'deleteMultipleUsers'])->name('delete_multiple_users');
+            Route::get('/trashed', [UserController::class, 'trashed'])->name('admin.users.trashed');
+            Route::get('/restore/{id}', [UserController::class, 'restore'])->name('admin.users.restore');
+            Route::post('/export', [UserController::class, 'export'])->name('admin.users.export');
+        });
+        //Services Routes
+        Route::group(['prefix' => '/services'], function () {
+            Route::get('/list/{service_type?}', [ServiceController::class, 'index'])->name('admin.services.list');
+            Route::get('/create', [ServiceController::class, 'create'])->name('admin.services.create');
+            Route::post('/store', [ServiceController::class, 'store'])->name('admin.services.store');
+            Route::get('/edit/{id}', [ServiceController::class, 'edit'])->name('admin.services.edit');
+            Route::post('/update/{id}', [ServiceController::class, 'update'])->name('admin.services.update');
+            Route::post('/delete', [ServiceController::class, 'destroy'])->name('admin.services.destroy');
+
+            // Update payment status
+            Route::post('/update-payment-status/{id}', [ServiceController::class, 'updatePaymentStatus'])->name('admin.users.update_payment_status');
+
+            Route::post('/delete-multiple-services', [ServiceController::class, 'deleteMultipleServices'])->name('delete_multiple_services');
+            Route::get('/trashed', [ServiceController::class, 'trashed'])->name('admin.services.trashed');
+            Route::get('/restore/{id}', [ServiceController::class, 'restore'])->name('admin.services.restore');
+            Route::post('/export', [ServiceController::class, 'export'])->name('admin.services.export');
         });
         //Expenses Routes
         Route::group(['prefix' => '/expenses'], function () {
-            Route::get('/', [ExpenseController::class, 'index'])->name('admin.expenses.list');
+            Route::get('/list', [ExpenseController::class, 'index'])->name('admin.expenses.list');
             Route::get('/create', [ExpenseController::class, 'create'])->name('admin.expenses.create');
             Route::post('/store', [ExpenseController::class, 'store'])->name('admin.expenses.store');
             Route::get('/customers/edit/{id}', [ExpenseController::class, 'edit'])->name('admin.expenses.edit');

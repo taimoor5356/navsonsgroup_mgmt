@@ -20,15 +20,26 @@ class DashboardController extends Controller
     //
     public function index(Request $request)
     {
+        $date = $request->input('date_range');
         $data['header_title'] = 'Dashboard';
+        if ($date) {
+            [$start, $end] = explode(' - ', $date);
 
-        $currentMonth = Carbon::now()->format('m');
+            // use range for summaries
+            $data['totalWashedCars']    = $this->totalWashedCars($start, $end);
+            $data['totalNoOfCustomers'] = $this->totalNoOfCustomers($start, $end);
+            $data['salesSummary']       = $this->salesSummary($start, $end);
+            $data['expensesSummary']    = $this->expensesSummary($start, $end);
 
-        $data['totalWashedCars'] = $this->totalWashedCars($currentMonth);
-        $data['totalNoOfCustomers'] = $this->totalNoOfCustomers($currentMonth);
+        } else {
+            // default: today only
+            $currentDay = Carbon::now()->format('Y-m-d');
 
-        $data['salesSummary'] = $this->salesSummary($currentMonth);
-        $data['expensesSummary'] = $this->expensesSummary($currentMonth);
+            $data['totalWashedCars']    = $this->totalWashedCars($currentDay, $currentDay);
+            $data['totalNoOfCustomers'] = $this->totalNoOfCustomers($currentDay, $currentDay);
+            $data['salesSummary']       = $this->salesSummary($currentDay, $currentDay);
+            $data['expensesSummary']    = $this->expensesSummary($currentDay, $currentDay);
+        }
 
         $authUser = Auth::user();
         if ($authUser) {
@@ -39,36 +50,74 @@ class DashboardController extends Controller
         }
     }
 
-    public function totalWashedCars($currentMonth) 
+    public function totalWashedCars($startDate, $endDate = null) 
     {
-        $data = Service::whereMonth('created_at', $currentMonth)->get();
-        return $data;
+        $query = Service::query();
+
+        if ($endDate) {
+            // Range filter
+            $query->whereBetween('created_at', [
+                $startDate . ' 00:00:00',
+                $endDate . ' 23:59:59'
+            ]);
+        } else {
+            // Single day filter
+            $query->whereDate('created_at', $startDate);
+        }
+
+        return $query->get();
     }
 
-    public function totalNoOfCustomers($currentMonth) 
+    public function totalNoOfCustomers($startDate, $endDate = null) 
     {
-        $data = User::customer()->active()->whereMonth('created_at', $currentMonth)->count();
-        return $data;
+        $query = User::customer()->active();
+
+        if ($endDate) {
+            $query->whereBetween('created_at', [
+                $startDate . ' 00:00:00',
+                $endDate . ' 23:59:59'
+            ]);
+        } else {
+            $query->whereDate('created_at', $startDate);
+        }
+
+        return $query->count();
     }
 
     // Sales / Payments / Discounts
-    public function salesSummary($currentMonth)
+    public function salesSummary($startDate, $endDate = null)
     {
-        return Service::selectRaw("
+        $query = Service::selectRaw("
             SUM(collected_amount) as total_sales,
             SUM(CASE WHEN payment_mode_id = 1 THEN collected_amount ELSE 0 END) as total_cash_received,
             SUM(CASE WHEN payment_mode_id != 1 THEN collected_amount ELSE 0 END) as total_online_payment_received,
             SUM(discount) as total_discounts
-        ")->whereMonth('created_at', $currentMonth)->first();
+        ");
+
+        if ($endDate) {
+            $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        } else {
+            $query->whereDate('created_at', $startDate);
+        }
+
+        return $query->first();
     }
 
     // Expenses
-    public function expensesSummary($currentMonth)
+    public function expensesSummary($startDate, $endDate = null)
     {
-        return Expense::selectRaw("
+        $query = Expense::selectRaw("
             SUM(amount) as total_expenses,
             SUM(CASE WHEN payment_mode_id = 1 THEN amount ELSE 0 END) as total_cash_expenses,
             SUM(CASE WHEN payment_mode_id != 1 THEN amount ELSE 0 END) as total_online_expenses
-        ")->whereMonth('created_at', $currentMonth)->first();
+        ");
+
+        if ($endDate) {
+            $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        } else {
+            $query->whereDate('created_at', $startDate);
+        }
+
+        return $query->first();
     }
 }

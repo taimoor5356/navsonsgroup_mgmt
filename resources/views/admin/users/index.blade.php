@@ -17,26 +17,25 @@
     <div class="row">
         <div class="col-12 d-flex justify-content-between">
             <div class="breadcrumb-list">
-                <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">{{$header_title}}</span></h4>
+                <h4 class="fw-bold py-3 mb-4"><span class="text-dark fw-light">{{$header_title}}</span></h4>
             </div>
+            @if (Auth::user()->hasRole('admin'))
             <div class="butns">
-                <a href="{{url('admin/users/customers/create')}}" class="btn btn-primary ms-2">Add New</a>
+                <a href="{{url('admin/users/create')}}" class="btn btn-primary ms-2">Add New</a>
             </div>
+            @endif
         </div>
     </div>
     <!-- Responsive Table -->
     <div class="card">
-        <h5 class="card-header">{{$header_title}}</h5>
-        <div class="card-body">
+        <div class="card-body p-2">
             <div class="table-responsive text-nowrap">
                 <table class="table data-table display responsive nowrap" width="100%">
                     <thead>
                         <tr class="text-nowrap">
                             <th>#</th>
-                            <th><input type="checkbox" id="check-all"></th>
                             <th>Name</th>
-                            <th>Vehicle</th>
-                            <th>Vehicle Registration Number</th>
+                            <th>Total Services</th>
                             <th>Phone</th>
                             <th>Actions</th>
                         </tr>
@@ -72,26 +71,21 @@
                     ajax: {
                         url: "{{route('admin.users.list', ['customers'])}}",
                     },
+                    pageLength: 100,       // show 100 records
+                    lengthChange: false,   // hide "Show X entries" dropdown
+                    // paging: false,         // disable pagination
+                    // info: false,            // hide "Showing X of Y entries"
                     columns: [{
                             name: 'sr_no',
                             data: 'sr_no'
-                        },
-                        {
-                            name: 'checkbox',
-                            data: 'checkbox',
-                            orderable: false,
                         },
                         {
                             name: 'name',
                             data: 'name'
                         },
                         {
-                            name: 'vehicle_name',
-                            data: 'vehicle_name'
-                        },
-                        {
-                            name: 'vehicle_registration_number',
-                            data: 'vehicle_registration_number'
+                            name: 'total_services',
+                            data: 'total_services'
                         },
                         {
                             name: 'phone',
@@ -103,6 +97,7 @@
                             data: 'actions'
                         }
                     ],
+                    order: [[0, 'desc']], // 👈 Default order: first column descending
                     createdRow: function(row, data, dataIndex) {
                         var index = dataIndex + 1; // Start from 1
                         $('td', row).eq(0).text(index); // Update the first cell of the row

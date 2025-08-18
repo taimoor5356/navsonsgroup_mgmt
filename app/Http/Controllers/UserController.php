@@ -43,20 +43,11 @@ class UserController extends Controller
             ->editColumn('sr_no', function ($row) {
                 return $row->id;
             })
-            ->addColumn('checkbox', function ($row) {
-                return '<input type="checkbox" data-user-id="'.$row->id.'" class="user-checkbox">';
-            })
             ->addColumn('name', function ($row) {
                 return ucwords(str_replace('_', ' ', $row->name));
             })
-            ->addColumn('vehicle_name', function ($row) {
-                return ucwords($row->vehicles?->first()->name);
-            })
-            ->addColumn('vehicle_registration_number', function ($row) {
-                return strtoupper($row->vehicles?->first()->registration_number);
-            })
-            ->addColumn('email', function ($row) {
-                return $row->email;
+            ->addColumn('total_services', function ($row) {
+                return ucwords($row->services?->count());
             })
             ->addColumn('phone', function ($row) {
                 return $row->phone;
@@ -65,7 +56,7 @@ class UserController extends Controller
                 $btns = '
                     <div class="actionb-btns-menu d-flex justify-content-center">';
                     if ($trashed == null) {
-                        $btns .= '<a class="btn btns m-0 p-1" data-user-id="'.$row->id.'" href="customers/edit/'.$row->id.'">
+                        $btns .= '<a class="btn btns m-0 p-1" data-user-id="'.$row->id.'" href="customers/edit/'.$row->vehicles?->first()->id.'">
                                 <i class="align-middle text-primary" data-feather="edit">
                                 </i>
                             </a>
@@ -83,7 +74,7 @@ class UserController extends Controller
                     }
                 return $btns;
             })
-            ->rawColumns(['sr_no', 'checkbox', 'email', 'name', 'role', 'actions'])
+            ->rawColumns(['sr_no', 'name', 'total_services', 'phone', 'actions'])
             ->setTotalRecords($totalRecords)
             ->setFilteredRecords($totalRecords) // For simplicity, same as totalRecords
             ->skipPaging()
@@ -92,14 +83,14 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request, $type)
+    public function index(Request $request, $type = 'customers')
     {
         //
         $data['header_title'] = ucfirst($type). ' List';
         $data['userType'] = $type;
         if ($request->ajax()) {
-            $data['records'] = User::with('role', 'vehicles')
-                                ->when($type == 'customers', fn($q) => $q->customer())
+            $data['records'] = User::with('role', 'services', 'vehicles')
+                                ->when($type, fn($q) => $q->customer())
                                 ->orderBy('id', 'desc');
             return $this->datatables($request, $data);
         }
@@ -123,6 +114,108 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'vehicle_registration_number' => 'required|string',
+            'service_type' => 'required|integer',
+            'charges' => 'required|integer',
+            'payment_mode_id' => 'required'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $vehicleRegNo = $request->vehicle_registration_number;
+            $vehicle = Vehicle::where('registration_number', $vehicleRegNo)->first();
+            $user = null;
+            if ($vehicle) {
+                // Vehicle exists
+                // Vehicle has no user assigned, try to find user by email
+                $user = User::where('id', $vehicle->user_id)->first();
+                if (!$vehicle->user_id) {
+                    if (!$user) {
+                        $user = User::create([
+                            'name' => !empty($request->customer_name) ? strtolower($request->customer_name) : 'new_user',
+                            'email' => !empty($request->customer_email) ? $request->customer_email : (!empty($request->customer_name) ? $request->customer_name.'@test.com' : 'new_user'.$vehicleRegNo.'@test.com'),
+                            'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
+                            'address' => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
+                            'user_type' => 3,
+                            'is_active' => 1,
+                            'password' => Hash::make('12345678'),
+                        ]);
+                    }
+                    $vehicle->update(['user_id' => $user->id]);
+                }
+                $user->assignRole('customer');
+            } else {
+                // Vehicle does not exist, create user and vehicle
+                $user = User::create([
+                    'name' => !empty($request->customer_name) ? strtolower($request->customer_name) : 'new_user',
+                    'email' => !empty($request->customer_email) ? $request->customer_email : 'new_user_' . $vehicleRegNo . '@test.com',
+                    'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
+                    'address' => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
+                    'user_type' => 3,
+                    'is_active' => 1,
+                    'password' => Hash::make('12345678'),
+                ]);
+                $user->assignRole('customer');
+                $vehicle = Vehicle::create([
+                    'name' => strtolower($request->vehicle_name),
+                    'user_id' => $user->id,
+                    'registration_number' => strtolower($vehicleRegNo),
+                ]);
+            }
+
+            // Always create car wash service entry
+            Service::create([
+                'vehicle_id' => $vehicle->id,
+                'service_type_id' => $request->service_type,
+                'diesel' => $request->filled('diesel') ? 1 : 0,
+                'polish' => $request->filled('polish') ? 1 : 0,
+                'charges' => $request->charges ?? 0,
+                'discount' => $request->discount ?? 0,
+                'discount_reason' => strtolower($request->discount_reason) ?? null,
+                'collected_amount' => $request->collected_amount ?? 0,
+                'payment_mode_id' => $request->payment_mode_id ?? 0,
+                'payment_status' => 0
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Entry added successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            ErrorLog::create([
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->route('admin.users.list')->with('error', 'Something went wrong');
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
+    {
+        //
+        $data['header_title'] = 'Edit User Details';
+        $data['record'] = User::with('vehicles.services')->where('id', $id)->first();
+        return view('admin.users.edit', $data);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        //
         $request->validate([
             // 'vehicle_name' => 'required|string',
             'vehicle_registration_number' => 'required|string',
@@ -196,77 +289,6 @@ class UserController extends Controller
                 'error' => $e->getMessage()
             ]);
             return redirect()->back()->with('error', 'Something went wrong');
-        }
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        //
-        $data['header_title'] = 'Edit User Details';
-        $data['record'] = User::with('vehicles.service')->where('id', $id)->first();
-        return view('admin.users.edit', $data);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
-    {
-        //
-        try {
-            request()->validate([
-                'name' => 'required|string',
-                'email' => 'required|email|unique:users,email,' . $id,
-                'role_id' => 'required'
-            ]);
-            if (User::where('provider_npi', '!=', NULL)->where('provider_npi', '=', $request->provider_npi)->where('id', '!=', $id)->exists()) {
-                return redirect()->back()->with('error', 'NPI number already assigned');
-            }
-            $user = User::with('billings')->find($id);
-            $user->name = $request->name;
-            $user->email = $request->email;
-            if (!empty($request->password)) {
-                $user->password =  Hash::make($request->password);
-            }
-            $user->user_type = $request->role_id;
-            $user->billings->each(function ($bill) {
-                $bill->user_id = null;
-                $bill->save();
-            });
-            $user->manual_provider_npi = !empty($request->manual_provider_npi) ? 1 : 0;
-            $user->provider_npi = $request->provider_npi;
-            $user->save();
-            $billings = Billing::where('provider_npi', $user->provider_npi)->get();
-            foreach ($billings as $billing) {
-                $billing->user_id = $user->id;
-                $billing->save();
-            }
-            $role = Role::find($request->role_id);
-            $user->assignRole($role);
-            if (!empty($request->group_id)) {
-                $groupIds = $request->group_id;
-                UserHasGroup::where('user_id', $user->id)->delete();
-                foreach ($groupIds as $groupId) {
-                    $userHasGroups = new UserHasGroup();
-                    $userHasGroups->user_id = $user->id;
-                    $userHasGroups->group_id = $groupId;
-                    $userHasGroups->save();
-                }
-            }
-            return redirect('admin/users')->with('success', 'User updated successfully');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 

@@ -12,14 +12,12 @@
             </div>
             <div class="butns">
                 <a href="{{url('admin/expenses/create')}}" class="btn btn-primary">Add New</a>
-                <a href="#" class="btn btn-danger">Trashed</a>
             </div>
         </div>
     </div>
     <!-- Responsive Table -->
     <div class="card">
-        <h5 class="card-header">{{$header_title}}</h5>
-        <div class="card-body">
+        <div class="card-body p-2">
             <div class="table-responsive text-nowrap">
                 <table class="table data-table display responsive nowrap" width="100%">
                     <thead>
@@ -28,6 +26,7 @@
                             <th>Expense Type</th>
                             <th>Name</th>
                             <th>Total Expense</th>
+                            <th>Description</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -55,8 +54,12 @@ $(document).ready(function() {
             serverSide: true,
             scrollX: true,
             ajax: {
-                url: "{{url('admin/expenses')}}",
+                url: "{{url('admin/expenses/list')}}",
             },
+            pageLength: 100,       // show 100 records
+            lengthChange: false,   // hide "Show X entries" dropdown
+            // paging: false,         // disable pagination
+            // info: false,            // hide "Showing X of Y entries"
             columns: [{
                     name: 'sr_no',
                     data: 'sr_no'
@@ -72,6 +75,10 @@ $(document).ready(function() {
                 {
                     name: 'expense_amount',
                     data: 'expense_amount'
+                },
+                {
+                    name: 'description',
+                    data: 'description'
                 },
                 {
                     className: 'text-center',

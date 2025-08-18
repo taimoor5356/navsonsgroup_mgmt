@@ -11,25 +11,18 @@
         $vehicleName = '';
         $registrationNumber = '';
         if (isset($record)) {
-            if (count($record->vehicles) > 0) {
-                $vehicle = $record->vehicles->first();
-                if (isset($vehicle)) {
-                    $vehicleName = $vehicle->name;
-                    $registrationNumber = $vehicle->registration_number;
-                    if (count($vehicle->services) > 0) {
-                        $service = $vehicle->services->first();
-                        if (isset($service)) {
-                            $diesel = $service->diesel;
-                            $polish = $service->polish;
-                            $serviceTypeId = $service->service_type_id;
-                            $charges = $service->charges;
-                            $discountAmount = $service->discount;
-                            $discountReason = $service->discount_reason;
-                            $collectedAmount = $service->collected_amount;
-                            $paymentModeId = $service->payment_mode_id;
-                        }
-                    }
-                }
+            if (isset($record->vehicle)) {
+                $vehicleName = $record->vehicle?->name;
+                $registrationNumber = $record->vehicle?->registration_number;
+                $diesel = $record->diesel;
+                $polish = $record->polish;
+                $serviceTypeId = $record->service_type_id;
+                $charges = $record->charges;
+                $discountAmount = $record->discount;
+                $discountReason = $record->discount_reason;
+                $collectedAmount = $record->collected_amount;
+                $paymentModeId = $record->payment_mode_id;
+                $paymentStatus = $record->payment_status;
             }
         }
     @endphp
@@ -142,21 +135,21 @@
                 <label class="form-label" for="customer-name">Customer Name</label>
                 <div class="input-group input-group-merge">
                     <span class="input-group-text"><i class="bx bx-user"></i></span>
-                    <input type="text" name="customer_name" value="{{isset($record) ? $record->name : ''}}" id="customer-name" class="form-control" placeholder="Enter Customer Name" aria-label="john.doe" aria-describedby="customer-name2">
+                    <input type="text" name="customer_name" value="{{isset($record) ? $record->vehicle?->user?->name : ''}}" id="customer-name" class="form-control" placeholder="Enter Customer Name" aria-label="john.doe" aria-describedby="customer-name2">
                 </div>
             </div>
             <div class="mb-3 col-md-6 col-12">
                 <label class="form-label" for="customer-phone">Customer Phone</label>
                 <div class="input-group input-group-merge">
                     <span class="input-group-text"><i class="bx bx-phone"></i></span>
-                    <input type="text" name="customer_phone" value="{{isset($record) ? $record->phone : ''}}" id="customer-phone" class="form-control" placeholder="Enter Customer Phone" aria-label="+923001234567" aria-describedby="customer-phone2">
+                    <input type="text" name="customer_phone" value="{{isset($record) ? $record->vehicle?->user?->phone : ''}}" id="customer-phone" class="form-control" placeholder="Enter Customer Phone" aria-label="+923001234567" aria-describedby="customer-phone2">
                 </div>
             </div>
             <div class="mb-3 col-md-6 col-12">
                 <label class="form-label" for="customer-address">Customer Address</label>
                 <div class="input-group input-group-merge">
                     <span class="input-group-text"><i class="bx bx-trip"></i></span>
-                    <input type="text" name="customer_address" value="{{isset($record) ? $record->address : ''}}" id="customer-address" class="form-control" placeholder="Enter Customer Address" aria-label="ghouri town" aria-describedby="customer-address2">
+                    <input type="text" name="customer_address" value="{{isset($record) ? $record->vehicle?->user?->address : ''}}" id="customer-address" class="form-control" placeholder="Enter Customer Address" aria-label="ghouri town" aria-describedby="customer-address2">
                 </div>
             </div>
         </div>
