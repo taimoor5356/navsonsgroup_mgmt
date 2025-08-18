@@ -206,6 +206,9 @@
                 });
             }
         });
+        $(document).on("keyup", "#vehicle-registration-number", function() {
+            $(this).val($(this).val().replace(/ /g, "-"));
+        });
    }); 
 </script>
 @endsection
