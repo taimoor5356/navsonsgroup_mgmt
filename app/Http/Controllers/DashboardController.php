@@ -33,12 +33,13 @@ class DashboardController extends Controller
 
         } else {
             // default: today only
-            $currentDay = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $startDay = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $currentDay = Carbon::now()->format('Y-m-d');
 
-            $data['totalWashedCars']    = $this->totalWashedCars($currentDay, $currentDay);
-            $data['totalNoOfCustomers'] = $this->totalNoOfCustomers($currentDay, $currentDay);
-            $data['salesSummary']       = $this->salesSummary($currentDay, $currentDay);
-            $data['expensesSummary']    = $this->expensesSummary($currentDay, $currentDay);
+            $data['totalWashedCars']    = $this->totalWashedCars($startDay, $currentDay);
+            $data['totalNoOfCustomers'] = $this->totalNoOfCustomers($startDay, $currentDay);
+            $data['salesSummary']       = $this->salesSummary($startDay, $currentDay);
+            $data['expensesSummary']    = $this->expensesSummary($startDay, $currentDay);
         }
 
         $authUser = Auth::user();
