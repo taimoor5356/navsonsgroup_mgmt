@@ -47,9 +47,11 @@
                             @csrf
                             @include('admin.services._form')
                     </div>
+                    @if (Auth::user()->hasRole(['admin', 'manager']))
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary">Submit</button>
                     </div>
+                    @endif
                 </div>
             </form>
         </div>

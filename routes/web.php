@@ -64,31 +64,31 @@ Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
         Route::group(['prefix' => '/services'], function () {
             Route::get('/list/{service_type?}', [ServiceController::class, 'index'])->name('admin.services.list');
             Route::get('/create', [ServiceController::class, 'create'])->name('admin.services.create');
-            Route::post('/store', [ServiceController::class, 'store'])->name('admin.services.store');
+            Route::post('/store', [ServiceController::class, 'store'])->name('admin.services.store')->middleware('role:admin|manager');
             Route::get('/edit/{id}', [ServiceController::class, 'edit'])->name('admin.services.edit');
-            Route::post('/update/{id}', [ServiceController::class, 'update'])->name('admin.services.update');
-            Route::post('/delete', [ServiceController::class, 'destroy'])->name('admin.services.destroy');
+            Route::post('/update/{id}', [ServiceController::class, 'update'])->name('admin.services.update')->middleware('role:admin|manager');
+            Route::post('/delete', [ServiceController::class, 'destroy'])->name('admin.services.destroy')->middleware('role:admin');
 
             // Update payment status
-            Route::post('/update-payment-status/{id}', [ServiceController::class, 'updatePaymentStatus'])->name('admin.users.update_payment_status');
+            Route::post('/update-payment-status/{id}', [ServiceController::class, 'updatePaymentStatus'])->name('admin.users.update_payment_status')->middleware('role:admin|manager');
 
-            Route::post('/delete-multiple-services', [ServiceController::class, 'deleteMultipleServices'])->name('delete_multiple_services');
+            Route::post('/delete-multiple-services', [ServiceController::class, 'deleteMultipleServices'])->name('delete_multiple_services')->middleware('role:admin');
             Route::get('/trashed', [ServiceController::class, 'trashed'])->name('admin.services.trashed');
-            Route::get('/restore/{id}', [ServiceController::class, 'restore'])->name('admin.services.restore');
+            Route::get('/restore/{id}', [ServiceController::class, 'restore'])->name('admin.services.restore')->middleware('role:admin');
             Route::post('/export', [ServiceController::class, 'export'])->name('admin.services.export');
         });
         //Expenses Routes
         Route::group(['prefix' => '/expenses'], function () {
             Route::get('/list', [ExpenseController::class, 'index'])->name('admin.expenses.list');
             Route::get('/create', [ExpenseController::class, 'create'])->name('admin.expenses.create');
-            Route::post('/store', [ExpenseController::class, 'store'])->name('admin.expenses.store');
+            Route::post('/store', [ExpenseController::class, 'store'])->name('admin.expenses.store')->middleware('role:admin|manager');
             Route::get('/customers/edit/{id}', [ExpenseController::class, 'edit'])->name('admin.expenses.edit');
-            Route::post('/update/{id}', [ExpenseController::class, 'update'])->name('admin.expenses.update');
-            Route::post('/delete', [ExpenseController::class, 'destroy'])->name('admin.expenses.destroy');
+            Route::post('/update/{id}', [ExpenseController::class, 'update'])->name('admin.expenses.update')->middleware('role:admin|manager');
+            Route::post('/delete', [ExpenseController::class, 'destroy'])->name('admin.expenses.destroy')->middleware('role:admin');
 
-            Route::post('/delete-multiple-expenses', [ExpenseController::class, 'deleteMultipleexpenses'])->name('delete_multiple_expenses');
+            Route::post('/delete-multiple-expenses', [ExpenseController::class, 'deleteMultipleexpenses'])->name('delete_multiple_expenses')->middleware('role:admin');
             Route::get('/trashed', [ExpenseController::class, 'trashed'])->name('admin.expenses.trashed');
-            Route::get('/restore/{id}', [ExpenseController::class, 'restore'])->name('admin.expenses.restore');
+            Route::get('/restore/{id}', [ExpenseController::class, 'restore'])->name('admin.expenses.restore')->middleware('role:admin');
             Route::post('/export', [ExpenseController::class, 'export'])->name('admin.expenses.export');
         });
         //ACL Routes

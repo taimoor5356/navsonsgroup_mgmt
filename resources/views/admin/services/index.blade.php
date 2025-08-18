@@ -161,7 +161,7 @@
             }
         });
 
-
+        @if (Auth::user()->hasRole(['admin', 'manager']))
         $(document).on('change', '.payment-toggle', function() {
             let checkbox = $(this);
             let id = checkbox.data('id');
@@ -180,7 +180,7 @@
                 checkbox.prop('checked', !newStatus); 
                 return;
             }
-
+            @if (Auth::user()->hasRole(['admin', 'manager']))
             // If confirmed → send AJAX
             $.ajax({
                 url: 'update-payment-status/' + id,
@@ -202,11 +202,12 @@
                     toastr.error('Something went wrong.');
                 }
             });
+            @endif
             setTimeout(() => {
                 table.draw(false);
             }, 1000);
         });
-
+        @endif
 
     });
 </script>
