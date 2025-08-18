@@ -44,6 +44,7 @@ class ServiceController extends Controller
             ->editColumn('sr_no', function ($row) {
                 return $row->id;
             })
+            
             ->editColumn('payment_status', function ($row) {
                 if ($row->payment_status == 1 && $row->collected_amount > 0) {
                     // Show only Paid badge
@@ -63,6 +64,26 @@ class ServiceController extends Controller
                     ';
                 }
             })
+            // ->editColumn('payment_status', function ($row) {
+            //     $status  = $row->payment_status;
+            //     $checked = $status == 1 ? 'checked' : '';
+            //     $label   = $status == 1 
+            //         ? '<small class="bg-success text-white px-3 py-1 rounded-pill">Paid</small>' 
+            //         : '<small class="bg-danger text-white px-3 py-1 rounded-pill">Un-Paid</small>';
+
+            //     return '
+            //         <div class="form-check form-switch d-flex justify-content-start align-items-center gap-2">
+            //             <input 
+            //                 class="form-check-input payment-toggle border border-secondary px-3" 
+            //                 type="checkbox" 
+            //                 role="switch" 
+            //                 data-id="'.$row->id.'" 
+            //                 '.$checked.'
+            //             >
+            //             '.$label.'
+            //         </div>
+            //     ';
+            // })
             ->addColumn('checkbox', function ($row) {
                 return '<input type="checkbox" data-user-id="'.$row->id.'" class="user-checkbox">';
             })
