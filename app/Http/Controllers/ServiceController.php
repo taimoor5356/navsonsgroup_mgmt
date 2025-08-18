@@ -96,7 +96,7 @@ class ServiceController extends Controller
                 return ucwords($row->vehicle?->name);
             })
             ->addColumn('vehicle_registration_number', function ($row) {
-                return strtoupper($row->vehicle?->registration_number);
+                return strtoupper($row->vehicle?->registration_number) . ' ('.$row->vehicle?->name.')';
             })
             ->addColumn('charges', function ($row) {
                 return $row->charges;
