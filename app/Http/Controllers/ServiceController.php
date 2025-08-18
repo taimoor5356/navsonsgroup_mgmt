@@ -223,7 +223,8 @@ class ServiceController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.services.list')->with('success', 'Entry added successfully');
+            return redirect()->back()->with('success', 'Entry added successfully');
+            // return redirect()->route('admin.services.list')->with('success', 'Entry added successfully');
         } catch (\Exception $e) {
             DB::rollBack();
             ErrorLog::create([
@@ -285,7 +286,8 @@ class ServiceController extends Controller
                 $user->address = $request->customer_address;
                 $user->save();
             }
-            return redirect()->route('admin.services.list')->with('success', 'Updated successfully');
+            return redirect()->back()->with('success', 'Updated successfully');
+            // return redirect()->route('admin.services.list')->with('success', 'Updated successfully');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Something went wrong');
         }
