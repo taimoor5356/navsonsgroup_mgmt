@@ -291,8 +291,8 @@ class ServiceController extends Controller
                 $service->discount = $request->discount ?? 0;
                 $service->discount_reason = strtolower($request->discount_reason) ?? null;
                 $service->payment_mode_id = $request->payment_mode_id ?? 0;
-                $service->created_at = !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now();
-                $service->updated_at = !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now();
+                $service->created_at = !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::parse($service->created_at)->format('Y-m-d H:i:s');
+                $service->updated_at = !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::parse($service->updated_at)->format('Y-m-d H:i:s');
                 $service->save();
             }
             $vehicle = Vehicle::where('id', $service->vehicle_id)->first();
