@@ -34,6 +34,7 @@
                     <thead>
                         <tr class="text-nowrap">
                             <th>#</th>
+                            <th>Date</th>
                             <th>Payment Status</th>
                             <th>Vehicle Registration Number</th>
                             <th>Charges</th>
@@ -82,6 +83,10 @@
                 columns: [{
                         name: 'sr_no',
                         data: 'sr_no'
+                    },
+                    {
+                        name: 'date',
+                        data: 'date',
                     },
                     {
                         name: 'payment_status',

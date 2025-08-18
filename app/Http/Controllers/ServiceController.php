@@ -44,7 +44,9 @@ class ServiceController extends Controller
             ->editColumn('sr_no', function ($row) {
                 return $row->id;
             })
-            
+            ->editColumn('date', function ($row) {
+                return Carbon::parse($row->created_at)->format('d M, Y');
+            })
             ->editColumn('payment_status', function ($row) {
                 if ($row->payment_status == 1 && $row->collected_amount > 0) {
                     // Show only Paid badge
