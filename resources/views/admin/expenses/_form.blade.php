@@ -24,8 +24,8 @@
     <div class="mb-3 col-md-4 col-12">
         <label class="form-label" for="user_id">Select User</label>
         <select name="user_id" id="user-id" class="form-control">
+            <option value="" selected disabled>Select User</option>
             @foreach (\App\Models\User::where('user_type', 5)->get() as $user)
-                <option value="" selected disabled>Select User</option>
                 <option value="{{$user->id}}">{{$user->name}}</option>
             @endforeach
         </select>
