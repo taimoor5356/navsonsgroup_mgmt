@@ -59,7 +59,16 @@ class UserController extends Controller
                 return number_format((25000 - $row->expenses?->sum('amount')), 2);
             })
             ->addColumn('total_services', function ($row) {
-                return ucwords($row->vehicles?->first()->services?->count());
+                $vehicle = $row->vehicles?->first();
+                if (isset($vehicle)) {
+                    if (count($vehicle->services) > 0) {
+                        return $vehicle->services->count();
+                    } else {
+                        return 0;
+                    }
+                } else {
+                    return 0;
+                }
             })
             ->addColumn('phone', function ($row) {
                 return $row->phone;
