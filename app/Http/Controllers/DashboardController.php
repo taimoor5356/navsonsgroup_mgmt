@@ -33,7 +33,7 @@ class DashboardController extends Controller
 
         } else {
             // default: today only
-            $currentDay = Carbon::now()->month;
+            $currentDay = Carbon::now()->format('Y-m');
 
             $data['totalWashedCars']    = $this->totalWashedCars($currentDay, $currentDay);
             $data['totalNoOfCustomers'] = $this->totalNoOfCustomers($currentDay, $currentDay);
