@@ -69,7 +69,7 @@
         </li>
         <li class="menu-item @if(Request::url() == url('admin/users/list/users')) active @endif">
           <a href="{{ url('admin/users/list/users') }}" class="menu-link">
-            <div data-i18n="Basic Inputs">Users</div>
+            <div data-i18n="Basic Inputs">Users (Employees)</div>
           </a>
         </li>
       </ul>
