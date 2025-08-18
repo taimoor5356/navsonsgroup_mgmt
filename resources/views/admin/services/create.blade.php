@@ -45,7 +45,7 @@
                     </div>
                     <div class="card-body">
                             @csrf
-                            @include('admin.users._form')
+                            @include('admin.services._form')
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary">Submit</button>

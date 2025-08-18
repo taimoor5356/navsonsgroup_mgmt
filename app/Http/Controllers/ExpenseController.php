@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ErrorLog;
 use App\Models\Expense;
 use App\Models\ExpenseType;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use DataTables;
 use Illuminate\Support\Facades\DB;
@@ -116,7 +117,9 @@ class ExpenseController extends Controller
                 'expense_type_id' => $request->expense_type_id,
                 'amount' => $request->amount,
                 'description' => $request->description,
-                'payment_mode_id' => $request->payment_mode_id
+                'payment_mode_id' => $request->payment_mode_id,
+                'created_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
+                'updated_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
             ]);
 
             DB::commit();

@@ -28,14 +28,14 @@
             <input type="number" value="{{isset($record) ? $record->amount : ''}}" name="amount" class="form-control" id="amount" placeholder="Enter amount" aria-label="amount" aria-describedby="amount2">
         </div>
     </div>
-    <div class="mb-3 col-md-6 col-12">
+    <div class="mb-3 col-md-4 col-12">
         <label class="form-label" for="description">Description</label>
         <div class="input-group input-group-merge">
             <span id="description2" class="input-group-text"><i class="bx bx-pencil"></i></span>
             <input type="text" value="{{isset($record) ? $record->description : ''}}" name="description" class="form-control" id="description" placeholder="Enter description" aria-label="description" aria-describedby="description2">
         </div>
     </div>
-    <div class="mb-3 col-md-6 col-12">
+    <div class="mb-3 col-md-4 col-12">
         <label class="form-label d-flex justify-content-between align-items-center" for="payment-mode">
             <div>
                 Payment Mode
@@ -48,6 +48,12 @@
                     <option value="{{$paymentMode->id}}">{{strtoupper(str_replace('_', ' ', $paymentMode->name))}}</option>
                 @endforeach
             </select>
+        </div>
+    </div>
+    <div class="mb-3 col-md-4 col-12">
+        <label class="form-label" for="date">Date</label>
+        <div class="input-group input-group-merge">
+            <input type="date" value="{{isset($record) ? $record->date : ''}}" name="date" class="form-control" id="date" placeholder="Enter date" aria-label="description" aria-describedby="description2">
         </div>
     </div>
 </div>

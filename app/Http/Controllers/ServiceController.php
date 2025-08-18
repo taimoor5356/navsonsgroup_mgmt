@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Service;
 use App\Models\Vehicle;
 use App\Models\ErrorLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -215,7 +216,9 @@ class ServiceController extends Controller
                 'discount_reason' => strtolower($request->discount_reason) ?? null,
                 'collected_amount' => $request->collected_amount ?? 0,
                 'payment_mode_id' => $request->payment_mode_id ?? 0,
-                'payment_status' => 0
+                'payment_status' => 0,
+                'created_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
+                'updated_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
             ]);
 
             DB::commit();
@@ -265,6 +268,8 @@ class ServiceController extends Controller
                 $service->discount = $request->discount ?? 0;
                 $service->discount_reason = strtolower($request->discount_reason) ?? null;
                 $service->payment_mode_id = $request->payment_mode_id ?? 0;
+                $service->created_at = !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now();
+                $service->updated_at = !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now();
                 $service->save();
             }
             $vehicle = Vehicle::where('id', $service->vehicle_id)->first();
