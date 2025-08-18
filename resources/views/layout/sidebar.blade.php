@@ -13,7 +13,7 @@
   </div>
 
   <div class="menu-inner-shadow"></div>
-  @if(Auth::user()->hasRole('admin'))
+  @if(Auth::user()->hasRole(['admin', 'manager', 'user']))
   <ul class="menu-inner py-1">
     <!-- Dashboard -->
     <li class="menu-item @if(Request::url() == url('admin/dashboard')) active @endif">
@@ -90,23 +90,6 @@
           </a>
         </li>
       </ul>
-    </li>
-  </ul>
-  @endif
-  @if(Auth::user()->user_type == 2 || Auth::user()->user_type == 3)
-  <ul class="menu-inner py-1">
-    <!-- Dashboard -->
-    <li class="menu-item @if(Request::url() == url('customer/dashboard')) active @endif">
-      <a href="{{url('customer/dashboard')}}" class="menu-link">
-        <i class="menu-icon tf-icons bx bx-home-circle"></i>
-        <div data-i18n="Analytics">Dashboard</div>
-      </a>
-    </li>
-    <li class="menu-item @if(Request::url() == url('customer/total-collection-report') || Request::url() == url('customer/total-worked-rvus-report') || Request::url() == url('customer/insurance-statuses-report') || Request::url() == url('customer/insurance-receivable-details-report') || Request::url() == url('customer/patient-receivable-details-report') || Request::url() == url('customer/patient-statuses-report')) active @endif">
-      <a href="{{url('customer/total-collection-report')}}" class="menu-link">
-        <i class="menu-icon tf-icons bx bx-file"></i>
-        <div data-i18n="Basic">Detailed Report</div>
-      </a>
     </li>
   </ul>
   @endif
