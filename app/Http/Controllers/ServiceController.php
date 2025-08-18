@@ -98,12 +98,12 @@ class ServiceController extends Controller
                 $btns = '
                     <div class="actionb-btns-menu d-flex justify-content-center">';
                     if ($trashed == null) {
-                        if ($row->payment_status == 0 && $row->collected_amount == 0) {
+                        // if ($row->payment_status == 0 && $row->collected_amount == 0) {
                             $btns .= '<a class="btn btns m-0 p-1" data-user-id="'.$row->id.'" href="edit/'.$row->id.'">
                                     <i class="align-middle text-primary" data-feather="edit">
                                     </i>
                                 </a>';
-                        }
+                        // }
                         // $btns .='<a class="btn btns m-0 p-1 delete-user" data-user-id="'.$row->id.'" href="#">
                         //         <i class="align-middle text-danger" data-feather="trash-2">
                         //         </i>
