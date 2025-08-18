@@ -46,13 +46,13 @@
                         <div class="col-md-4">
                             <label for="dateRangePicker">Filter Date</label>
                             <input 
-    type="text" 
-    name="date_range" 
-    id="dateRangePicker" 
-    class="form-control" 
-    placeholder="Select Date Range"
-    value="{{ request('date_range') }}"
->
+                                type="text" 
+                                name="date_range" 
+                                id="dateRangePicker" 
+                                class="form-control" 
+                                placeholder="Select Date Range"
+                                value="{{ request('date_range') }}"
+                            >
                         </div>
                     </div>
                     <div class="row">
