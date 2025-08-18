@@ -38,7 +38,7 @@
     @include('_messages')
     <div class="row">
         <div class="col-xl">
-            <form method="POST" action="{{url('admin/users/customers/store')}}">
+            <form method="POST" action="{{url('admin/users/store')}}">
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">{{$header_title}}</h5>

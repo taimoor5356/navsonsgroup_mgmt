@@ -20,8 +20,12 @@ class DashboardController extends Controller
     //
     public function index(Request $request)
     {
-        $date = $request->input('date_range');
         $data['header_title'] = 'Dashboard';
+        if (Auth::user()->role?->name == 'employee') {
+            $data['record'] = Auth::user();
+            return view('user.dashboard', $data);
+        }
+        $date = $request->input('date_range');
         if ($date) {
             [$start, $end] = explode(' - ', $date);
 
@@ -72,16 +76,6 @@ class DashboardController extends Controller
     public function totalNoOfCustomers($startDate, $endDate = null) 
     {
         $query = User::customer()->active();
-
-        if ($endDate) {
-            $query->whereBetween('created_at', [
-                $startDate . ' 00:00:00',
-                $endDate . ' 23:59:59'
-            ]);
-        } else {
-            $query->whereDate('created_at', $startDate);
-        }
-
         return $query->count();
     }
 

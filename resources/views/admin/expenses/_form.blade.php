@@ -22,6 +22,15 @@
         </div>
     </div>
     <div class="mb-3 col-md-4 col-12">
+        <label class="form-label" for="user_id">Select User</label>
+        <select name="user_id" id="user-id" class="form-control">
+            @foreach (\App\Models\User::where('user_type', 5)->get() as $user)
+                <option value="" selected disabled>Select User</option>
+                <option value="{{$user->id}}">{{$user->name}}</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="mb-3 col-md-4 col-12">
         <label class="form-label" for="amount">Amount</label>
         <div class="input-group input-group-merge">
             <span id="amount2" class="input-group-text"><i class="bx bx-money"></i></span>
@@ -53,7 +62,13 @@
     <div class="mb-3 col-md-4 col-12">
         <label class="form-label" for="date">Date</label>
         <div class="input-group input-group-merge">
-            <input type="date" value="{{isset($record) ? $record->date : ''}}" name="date" class="form-control" id="date" placeholder="Enter date" aria-label="description" aria-describedby="description2">
+            <input type="datetime-local" value="{{isset($record) ? $record->date : ''}}" name="date" class="form-control" id="date" placeholder="Enter date" aria-label="description" aria-describedby="description2">
         </div>
     </div>
 </div>
+
+@section('_scripts')
+<script>
+
+</script>
+@endsection

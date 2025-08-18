@@ -115,15 +115,15 @@
                     <div class="card">
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Discounts</span>
-                            <h3 class="card-title text-nowrap mb-2">{{!empty($salesSummary) ? number_format($salesSummary->total_discounts) : 0}}</h3>
+                            <h3 class="card-title text-nowrap mb-2">Rs {{!empty($salesSummary) ? number_format($salesSummary->total_discounts, 2) : 0}}</h3>
                         </div>
                     </div>
                 </div>
                 <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
                     <div class="card">
                         <div class="card-body">
-                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-car text-primary"></i> Total Car Washed</span>
-                            <h3 class="card-title text-nowrap mb-2">{{!empty($totalWashedCars) ? number_format($totalWashedCars->count()) : 0}}</h3>
+                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-car text-primary"></i> Total Vehicles Washed</span>
+                            <h3 class="card-title text-nowrap mb-2">{{!empty($totalWashedCars) ? $totalWashedCars->count() : 0}}</h3>
                         </div>
                     </div>
                 </div>
@@ -131,7 +131,7 @@
                     <div class="card">
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-group text-info"></i> Customers</span>
-                            <h3 class="card-title text-nowrap mb-2">{{!empty($totalNoOfCustomers) ? number_format($totalNoOfCustomers) : 0}}</h3>
+                            <h3 class="card-title text-nowrap mb-2">{{!empty($totalNoOfCustomers) ? $totalNoOfCustomers : 0}}</h3>
                         </div>
                     </div>
                 </div>

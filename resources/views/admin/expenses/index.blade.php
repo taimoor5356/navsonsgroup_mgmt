@@ -8,7 +8,7 @@
     <div class="row">
         <div class="col-12 d-flex justify-content-between">
             <div class="breadcrumb-list">
-                <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">{{$header_title}}</span></h4>
+                <h4 class="fw-bold py-3 mb-4"><span class="text-dark fw-light">{{$header_title}}</span></h4>
             </div>
             <div class="butns">
                 <a href="{{url('admin/expenses/create')}}" class="btn btn-primary">Add New</a>

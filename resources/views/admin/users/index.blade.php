@@ -19,10 +19,12 @@
             <div class="breadcrumb-list">
                 <h4 class="fw-bold py-3 mb-4"><span class="text-dark fw-light">{{$header_title}}</span></h4>
             </div>
-            @if (Auth::user()->hasRole('admin'))
+            @if (request()->route('type') == 'users')
+            @if (Auth::user()->hasRole(['admin']))
             <div class="butns">
                 <a href="{{url('admin/users/create')}}" class="btn btn-primary ms-2">Add New</a>
             </div>
+            @endif
             @endif
         </div>
     </div>
@@ -35,7 +37,11 @@
                         <tr class="text-nowrap">
                             <th>#</th>
                             <th>Name</th>
-                            <th>Total Services</th>
+                            <th>Email</th>
+                            @if(request()->route('type') == 'users')<th>Total Salary</th>@endif
+                            @if(request()->route('type') == 'users')<th>Loan Amount</th>@endif
+                            @if(request()->route('type') == 'users')<th>Salary Left</th>@endif
+                            @if(request()->route('type') == 'customers')<th>Total Services</th>@endif
                             <th>Phone</th>
                             <th>Actions</th>
                         </tr>
@@ -64,12 +70,15 @@
             // Check if DataTable is already initialized
             if (!$.fn.dataTable.isDataTable(table)) {
                 // Initialize the DataTable
+                var url = "{{route('admin.users.list', [':usertype'])}}";
+                url = url.replace(':usertype', "{{request()->route('type')}}");
+                
                 var table = table.DataTable({
                     processing: true,
                     serverSide: true,
                     scrollX: true,
                     ajax: {
-                        url: "{{route('admin.users.list', ['customers'])}}",
+                        url: url,
                     },
                     pageLength: 100,       // show 100 records
                     lengthChange: false,   // hide "Show X entries" dropdown
@@ -84,9 +93,33 @@
                             data: 'name'
                         },
                         {
+                            name: 'email',
+                            data: 'email'
+                        },
+                        @if(request()->route('type') == 'users')
+                        {
+                            name: 'total_salary',
+                            data: 'total_salary'
+                        },
+                        @endif
+                        @if(request()->route('type') == 'users')
+                        {
+                            name: 'loan',
+                            data: 'loan'
+                        },
+                        @endif
+                        @if(request()->route('type') == 'users')
+                        {
+                            name: 'salary_left',
+                            data: 'salary_left'
+                        },
+                        @endif
+                        @if(request()->route('type') == 'customers')
+                        {
                             name: 'total_services',
                             data: 'total_services'
                         },
+                        @endif
                         {
                             name: 'phone',
                             data: 'phone'

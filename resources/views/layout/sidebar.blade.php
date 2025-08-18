@@ -56,11 +56,23 @@
         <div data-i18n="Basic">Inventory</div>
       </a>
     </li>
-    <li class="menu-item @if(Request::url() == url('admin/users/list') || Request::url() == url('admin/users/create')) active @endif">
-      <a href="#" class="menu-link">
+    <li class="menu-item @if(Request::url() == url('admin/users/list/users') || Request::url() == url('admin/users/list/customers') || Request::url() == url('admin/users/create')) active open @endif">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
         <i class="menu-icon tf-icons bx bx-group"></i>
-        <div data-i18n="Basic">Users</div>
+        <div data-i18n="Form Elements">Users</div>
       </a>
+      <ul class="menu-sub">
+        <li class="menu-item @if(Request::url() == url('admin/users/list/customers')) active @endif">
+          <a href="{{ url('admin/users/list/customers') }}" class="menu-link">
+            <div data-i18n="Basic Inputs">Customers</div>
+          </a>
+        </li>
+        <li class="menu-item @if(Request::url() == url('admin/users/list/users')) active @endif">
+          <a href="{{ url('admin/users/list/users') }}" class="menu-link">
+            <div data-i18n="Basic Inputs">Users</div>
+          </a>
+        </li>
+      </ul>
     </li>
     <li class="menu-item @if(Request::url() == url('admin/previous-payments') || Request::url() == url('admin/previous-payments/create') || Request::segment(2) == 'previous-payments') active @endif">
       <a href="#" class="menu-link">
@@ -85,7 +97,7 @@
       </a>
       <ul class="menu-sub">
         <li class="menu-item">
-          <a href="#" class="menu-link">
+          <a href="{{ url('admin/acl/roles') }}" class="menu-link">
             <div data-i18n="Basic Inputs">Roles</div>
           </a>
         </li>

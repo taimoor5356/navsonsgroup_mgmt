@@ -59,6 +59,14 @@ class User extends Authenticatable
         return $records;
     }
 
+    static public function user()
+    {
+        $records = User::with('role')->whereHas('role', function ($q) {
+            $q->where('name', 'user')->orWhere('name', 'admin')->orWhere('name', 'manager')->orWhere('name', 'employee');
+        });
+        return $records;
+    }
+
     public function scopeActive(Builder $query)
     {
         return $query->where('is_active', 1);
@@ -72,6 +80,14 @@ class User extends Authenticatable
         });
     }
 
+    // Scope for customer role
+    public function scopeUser(Builder $query)
+    {
+        return $query->with('role')->whereHas('role', function ($q) {
+            $q->where('name', 'user')->orWhere('name', 'admin')->orWhere('name', 'manager')->orWhere('name', 'employee');
+        });
+    }
+
     // Relations
     public function role()
     {
@@ -81,5 +97,10 @@ class User extends Authenticatable
     public function vehicles()
     {
         return $this->hasMany(Vehicle::class, 'user_id', 'id');
+    }
+    
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class, 'user_id', 'id');
     }
 }

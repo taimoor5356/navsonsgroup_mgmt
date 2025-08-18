@@ -28,10 +28,10 @@ class AuthController extends Controller
                         return redirect()->route('admin.dashboard');
                     } else if ((isset($authUser->role) && $authUser->role?->name == 'customer')) {
                         return redirect()->route('customer.dashboard');
-                    } else if ((isset($authUser->role) && $authUser->role?->name == 'admin customer')) {
-                        return redirect()->route('customer.dashboard');
                     } else if ((isset($authUser->role) && $authUser->role?->name == 'user')) {
                         return redirect()->route('admin.dashboard');
+                    } else if ((isset($authUser->role) && ($authUser->role?->name == 'employee'))) {
+                        return redirect()->route('user.dashboard');
                     }
                 } else {
                     return redirect()->back()->with('error', 'Invalid credentials');

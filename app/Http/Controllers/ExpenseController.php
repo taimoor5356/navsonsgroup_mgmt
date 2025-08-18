@@ -114,12 +114,13 @@ class ExpenseController extends Controller
         try {
             Expense::create([
                 'name' => $request->name,
+                'user_id' => !empty($request->user_id) ? $request->user_id : null,
                 'expense_type_id' => $request->expense_type_id,
                 'amount' => $request->amount,
                 'description' => $request->description,
                 'payment_mode_id' => $request->payment_mode_id,
-                'created_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
-                'updated_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
+                'created_at' => !empty($request->date) ? Carbon::parse($request->date) : Carbon::now(),
+                'updated_at' => !empty($request->date) ? Carbon::parse($request->date) : Carbon::now(),
             ]);
 
             DB::commit();

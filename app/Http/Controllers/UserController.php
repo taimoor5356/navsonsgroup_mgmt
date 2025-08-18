@@ -46,6 +46,18 @@ class UserController extends Controller
             ->addColumn('name', function ($row) {
                 return ucwords(str_replace('_', ' ', $row->name));
             })
+            ->addColumn('email', function ($row) {
+                return ucwords($row->email);
+            })
+            ->addColumn('total_salary', function ($row) {
+                return number_format(25000, 2);
+            })
+            ->addColumn('loan', function ($row) {
+                return ucwords($row->expenses?->sum('amount'));
+            })
+            ->addColumn('salary_left', function ($row) {
+                return number_format((25000 - $row->expenses?->sum('amount')), 2);
+            })
             ->addColumn('total_services', function ($row) {
                 return ucwords($row->services?->count());
             })
@@ -56,7 +68,7 @@ class UserController extends Controller
                 $btns = '
                     <div class="actionb-btns-menu d-flex justify-content-center">';
                     if ($trashed == null) {
-                        $btns .= '<a class="btn btns m-0 p-1" data-user-id="'.$row->id.'" href="customers/edit/'.$row->vehicles?->first()->id.'">
+                        $btns .= '<a class="btn btns m-0 p-1" data-user-id="'.$row->id.'" href="customers/edit/">
                                 <i class="align-middle text-primary" data-feather="edit">
                                 </i>
                             </a>
@@ -89,8 +101,9 @@ class UserController extends Controller
         $data['header_title'] = ucfirst($type). ' List';
         $data['userType'] = $type;
         if ($request->ajax()) {
-            $data['records'] = User::with('role', 'services', 'vehicles')
-                                ->when($type, fn($q) => $q->customer())
+            $data['records'] = User::with('role', 'vehicles', 'expenses')
+                                ->when($type == 'customers', fn($q) => $q->customer())
+                                ->when($type == 'users', fn($q) => $q->user())
                                 ->orderBy('id', 'desc');
             return $this->datatables($request, $data);
         }
@@ -100,12 +113,11 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create($type)
+    public function create()
     {
         //
         $data['header_title'] = 'Add New';
-        $data['userType'] = $type;
-        $data['roles'] = Role::get();
+        $data['roles'] = Role::where('name', 'employee')->get();
         return view('admin.users.create', $data);
     }
 
@@ -115,69 +127,25 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'vehicle_registration_number' => 'required|string',
-            'service_type' => 'required|integer',
-            'charges' => 'required|integer',
-            'payment_mode_id' => 'required'
+            'user_name' => 'required',
+            'user_email' => 'required',
+            'user_phone' => 'required',
+            'user_address' => 'required',
+            'role_id' => 'required'
         ]);
 
         DB::beginTransaction();
 
         try {
-            $vehicleRegNo = $request->vehicle_registration_number;
-            $vehicle = Vehicle::where('registration_number', $vehicleRegNo)->first();
-            $user = null;
-            if ($vehicle) {
-                // Vehicle exists
-                // Vehicle has no user assigned, try to find user by email
-                $user = User::where('id', $vehicle->user_id)->first();
-                if (!$vehicle->user_id) {
-                    if (!$user) {
-                        $user = User::create([
-                            'name' => !empty($request->customer_name) ? strtolower($request->customer_name) : 'new_user',
-                            'email' => !empty($request->customer_email) ? $request->customer_email : (!empty($request->customer_name) ? $request->customer_name.'@test.com' : 'new_user'.$vehicleRegNo.'@test.com'),
-                            'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
-                            'address' => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
-                            'user_type' => 3,
-                            'is_active' => 1,
-                            'password' => Hash::make('12345678'),
-                        ]);
-                    }
-                    $vehicle->update(['user_id' => $user->id]);
-                }
-                $user->assignRole('customer');
-            } else {
-                // Vehicle does not exist, create user and vehicle
-                $user = User::create([
-                    'name' => !empty($request->customer_name) ? strtolower($request->customer_name) : 'new_user',
-                    'email' => !empty($request->customer_email) ? $request->customer_email : 'new_user_' . $vehicleRegNo . '@test.com',
-                    'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
-                    'address' => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
-                    'user_type' => 3,
-                    'is_active' => 1,
-                    'password' => Hash::make('12345678'),
-                ]);
-                $user->assignRole('customer');
-                $vehicle = Vehicle::create([
-                    'name' => strtolower($request->vehicle_name),
-                    'user_id' => $user->id,
-                    'registration_number' => strtolower($vehicleRegNo),
-                ]);
-            }
-
-            // Always create car wash service entry
-            Service::create([
-                'vehicle_id' => $vehicle->id,
-                'service_type_id' => $request->service_type,
-                'diesel' => $request->filled('diesel') ? 1 : 0,
-                'polish' => $request->filled('polish') ? 1 : 0,
-                'charges' => $request->charges ?? 0,
-                'discount' => $request->discount ?? 0,
-                'discount_reason' => strtolower($request->discount_reason) ?? null,
-                'collected_amount' => $request->collected_amount ?? 0,
-                'payment_mode_id' => $request->payment_mode_id ?? 0,
-                'payment_status' => 0
+            $user = User::create([
+                'name' => !empty($request->user_name) ? $request->user_name : 'test_user_name',
+                'email' => $request->user_email,
+                'phone' => !empty($request->user_phone) ? $request->user_phone : 'test_user_phone',
+                'address' => !empty($request->user_address) ? $request->user_address : 'test_user_address',
+                'user_type' => !empty($request->role_id) ? $request->role_id : '',
+                'password' => Hash::make('12345678')
             ]);
+            $user->assignRole('employee');
 
             DB::commit();
 
