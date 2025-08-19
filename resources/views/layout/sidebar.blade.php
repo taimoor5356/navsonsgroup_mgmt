@@ -74,18 +74,6 @@
         </li>
       </ul>
     </li>
-    <li class="menu-item @if(Request::url() == url('admin/previous-payments') || Request::url() == url('admin/previous-payments/create') || Request::segment(2) == 'previous-payments') active @endif">
-      <a href="#" class="menu-link">
-        <i class="menu-icon tf-icons bx bx-money"></i>
-        <div data-i18n="Basic">Payments</div>
-      </a>
-    </li>
-    <!-- <li class="menu-item @if(Request::url() == url('admin/files') || Request::url() == url('admin/files/create') || Request::segment(2) == 'files') active @endif">
-      <a href="{{url('admin/files')}}" class="menu-link">
-        <i class="menu-icon tf-icons bx bx-file"></i>
-        <div data-i18n="Basic">Files</div>
-      </a>
-    </li> -->
 
     <!-- Forms & Tables -->
     <li class="menu-header small text-uppercase"><span class="menu-header-text">Access Control List (ACL)</span></li>
