@@ -252,8 +252,8 @@ class ServiceController extends Controller
                 'collected_amount' => $request->collected_amount ?? 0,
                 'payment_mode_id' => $request->payment_mode_id ?? 0,
                 'payment_status' => 0,
-                'created_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
-                'updated_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
+                // 'created_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
+                // 'updated_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
             ]);
 
             DB::commit();

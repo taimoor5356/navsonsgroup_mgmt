@@ -154,7 +154,7 @@
             </div>
         </div>
     </div>
-    <div class="mb-3 col-md-6 col-12">
+    <!-- <div class="mb-3 col-md-6 col-12">
         <label class="form-label d-flex justify-content-between align-items-center" for="date">
             <div>
                 Date
@@ -163,7 +163,7 @@
         <div class="input-group">
             <input type="date" name="date" id="date" class="form-control">
         </div>
-    </div>
+    </div> -->
 </div>
 
 @section('_scripts')
