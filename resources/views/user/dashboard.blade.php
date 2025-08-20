@@ -72,6 +72,7 @@
                         <div class="card-body">
                             <table class="table table-bordered">
                                 <thead>
+                                    <th>Date</th>
                                     <th>Expense Name</th>
                                     <th>Detail</th>
                                     <th>Amount</th>
@@ -79,6 +80,9 @@
                                 <tbody>
                                     @foreach(\App\Models\Expense::where('user_id', Auth::user()->id)->get() as $expense)
                                         <tr>
+                                            <td>
+                                                {{\Carbon\Carbon::parse($expense->created_at)->format('d M, Y')}}
+                                            </td>
                                             <td>
                                                 {{$expense->name}}
                                             </td>
