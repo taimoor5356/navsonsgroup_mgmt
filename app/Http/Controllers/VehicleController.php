@@ -66,7 +66,7 @@ class VehicleController extends Controller
     public function searchVehicleByNumber(Request $request)
     {
         if(!empty($request->registration_number)){
-            $vehicleExists = Vehicle::with('user')->where('registration_number', $request->registration_number)->first();
+            $vehicleExists = Vehicle::with('user')->where('registration_number', strtolower($request->registration_number))->first();
             if (isset($vehicleExists)) {
                 $data = [
                     'status' => true,

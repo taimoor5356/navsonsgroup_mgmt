@@ -78,7 +78,7 @@ class ExpenseController extends Controller
         //
         $data['header_title'] = 'Expenses List';
         if ($request->ajax()) {
-            $data['records'] = Expense::with('expenseType')->orderBy('id', 'desc');
+            $data['records'] = Expense::with('expenseType')->orderBy('created_at', 'desc');
             return $this->datatables($request, $data);
         }
         return view('admin.expenses.index', $data);

@@ -58,11 +58,13 @@ $(document).ready(function() {
             },
             pageLength: 100,       // show 100 records
             lengthChange: false,   // hide "Show X entries" dropdown
+            order: [], // 👈 important: disable client-side ordering
             // paging: false,         // disable pagination
             // info: false,            // hide "Showing X of Y entries"
             columns: [{
                     name: 'sr_no',
-                    data: 'sr_no'
+                    data: 'sr_no',
+                    orderable: false
                 },
                 {
                     name: 'expense_type',
@@ -83,14 +85,15 @@ $(document).ready(function() {
                 {
                     className: 'text-center',
                     name: 'actions',
-                    data: 'actions'
+                    data: 'actions',
+                    orderable: false
                 },
             ],
-                createdRow: function(row, data, dataIndex) {
-                    var info = table.page.info(); 
-                    var index = info.start + dataIndex + 1; // 👈 offset by current page
-                    $('td', row).eq(0).text(index);
-                }
+            createdRow: function(row, data, dataIndex) {
+                var info = table.page.info(); 
+                var index = info.start + dataIndex + 1; // 👈 offset by current page
+                $('td', row).eq(0).text(index);
+            }
         });
         // After initializing DataTables, call feather.replace()
         table.on('draw', function() {

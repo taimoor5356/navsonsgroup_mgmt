@@ -40,10 +40,8 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('postlogout');
 Route::post('search-vehicle', [VehicleController::class, 'searchVehicleByNumber'])->name('search_vehicle_by_number');
 
 Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
-        
     //Admin Routes
     Route::group(['prefix' => 'admin'], function () {
-
         //Dashboard Routes
         Route::get('/dashboard/{date?}', [DashboardController::class, 'index'])->name('admin.dashboard');
         //Users Routes

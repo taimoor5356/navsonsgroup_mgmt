@@ -35,6 +35,12 @@ class ServiceController extends Controller
                 });
             });
         }
+        if (!empty($request->date_range)) {
+            $filterDate = explode(' - ', $request->date_range);
+            $startDate = $filterDate[0];
+            $endDate = $filterDate[1];
+            $records = $records->whereDate('created_at', '>=', $startDate)->whereDate('created_at', '<=', $endDate);
+        }
         $totalRecords = $records->count(); // Get the total number of records for pagination
         $data = $records->skip($request->start)
             ->take($request->length)
@@ -155,7 +161,8 @@ class ServiceController extends Controller
         $data['header_title'] = 'Services List';
         if ($request->ajax()) {
             $data['records'] = Service::with('vehicle.user', 'payment_mode')
-                                ->orderBy('id', 'desc');
+                                ->orderBy('payment_status', 'asc')   // unpaid (0) first, paid (1) later
+                                ->orderBy('created_at', 'desc');     // then latest first
             return $this->datatables($request, $data);
         }
         return view('admin.services.index', $data);

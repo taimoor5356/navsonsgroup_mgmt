@@ -28,6 +28,26 @@
     </div>
     <!-- Responsive Table -->
     <div class="card p-0">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="dateRangePicker">Filter Date</label>
+                    <input 
+                        type="text" 
+                        name="date_range" 
+                        id="dateRangePicker" 
+                        class="form-control" 
+                        placeholder="Select Date Range"
+                        value="{{ request('date_range') }}"
+                    >
+                </div>
+                <!-- <div class="col-md-3">
+                    <select name="" class="form-control" id="">
+                        <option value=""></option>
+                    </select>
+                </div> -->
+            </div>
+        </div>
         <div class="card-body p-2">
             <div class="table-responsive text-nowrap">
                 <table class="table data-table display responsive nowrap" width="100%">
@@ -75,14 +95,17 @@
                 scrollX: true,
                 ajax: {
                     url: "{{route('admin.services.list')}}",
+                    data: function (d) {
+                        d.date_range = $('#dateRangePicker').val();
+                    }
                 },
-                pageLength: 100,       // show 100 records
+                pageLength: 25,       // show 100 records
                 lengthChange: false,   // hide "Show X entries" dropdown
-                // paging: false,         // disable pagination
-                // info: false,            // hide "Showing X of Y entries"
+                order: [], // 👈 important: disable client-side ordering
                 columns: [{
                         name: 'sr_no',
-                        data: 'sr_no'
+                        data: 'sr_no',
+                        orderable: false
                     },
                     {
                         name: 'date',
@@ -123,13 +146,14 @@
                     {
                         className: 'text-center',
                         name: 'actions',
-                        data: 'actions'
+                        data: 'actions',
+                        orderable: false
                     }
                 ],
-                order: [[0, 'desc']], // 👈 Default order: first column descending
                 createdRow: function(row, data, dataIndex) {
-                    var index = dataIndex + 1; // Start from 1
-                    $('td', row).eq(0).text(index); // Update the first cell of the row
+                    var info = table.page.info(); 
+                    var index = info.start + dataIndex + 1; // 👈 offset by current page
+                    $('td', row).eq(0).text(index);
                 }
             });
         } else {
@@ -214,6 +238,26 @@
         });
         @endif
 
+        $(function() {
+            $('#dateRangePicker').daterangepicker({
+                autoUpdateInput: false,     // don’t fill until user selects
+                locale: {
+                    cancelLabel: 'Clear',
+                    format: 'YYYY-MM-DD'    // format for backend
+                }
+            });
+
+            // Set the selected value into the input
+            $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+                table.draw(false);
+            });
+
+            // Clear on cancel
+            $('#dateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+            });
+        });
     });
 </script>
 @endsection
