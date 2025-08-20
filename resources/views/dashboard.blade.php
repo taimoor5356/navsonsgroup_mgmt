@@ -57,7 +57,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-4">
-                            <input type="submit" class="btn btn-primary">
+                            <input type="submit" class="btn btn-primary btn-sm">
                         </div>
                     </div>
                 </form>
@@ -68,6 +68,7 @@
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-success"></i> Total Sale</span>
                             <h3 class="card-title text-nowrap mb-2">Rs {{!empty($salesSummary) ? number_format($salesSummary->total_sales, 2) : 0}}</h3>
+                            <a href="{{route('admin.services.list')}}" class="btn btn-success rounded btn-xs">View More</a>
                         </div>
                     </div>
                 </div>
@@ -76,6 +77,7 @@
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Expenses</span>
                             <h3 class="card-title text-nowrap mb-2">Rs {{!empty($expensesSummary) ? number_format($expensesSummary->total_expenses, 2) : 0}}</h3>
+                            <a href="{{route('admin.expenses.list')}}" class="btn btn-danger rounded btn-xs">View More</a>
                         </div>
                     </div>
                 </div>
@@ -100,6 +102,7 @@
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Cash Expense</span>
                             <h3 class="card-title text-nowrap mb-2">Rs {{!empty($expensesSummary) ? number_format(($expensesSummary->total_cash_expenses), 2) : 0}}</h3>
+                            <a href="{{route('admin.expenses.list')}}" class="btn btn-danger rounded btn-xs">View More</a>
                         </div>
                     </div>
                 </div>
@@ -108,6 +111,7 @@
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Online Expense</span>
                             <h3 class="card-title text-nowrap mb-2">Rs {{!empty($expensesSummary) ? number_format(($expensesSummary->total_online_expenses), 2) : 0}}</h3>
+                            <a href="{{route('admin.expenses.list')}}" class="btn btn-danger rounded btn-xs">View More</a>
                         </div>
                     </div>
                 </div>
@@ -116,6 +120,7 @@
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Discounts</span>
                             <h3 class="card-title text-nowrap mb-2">Rs {{!empty($salesSummary) ? number_format($salesSummary->total_discounts, 2) : 0}}</h3>
+                            <a href="{{route('admin.services.list')}}" class="btn btn-danger rounded btn-xs">View More</a>
                         </div>
                     </div>
                 </div>
@@ -124,6 +129,7 @@
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-car text-primary"></i> Total Vehicles Washed</span>
                             <h3 class="card-title text-nowrap mb-2">{{!empty($totalWashedCars) ? $totalWashedCars->count() : 0}}</h3>
+                            <a href="{{route('admin.services.list')}}" class="btn btn-primary rounded btn-xs">View More</a>
                         </div>
                     </div>
                 </div>
@@ -132,6 +138,7 @@
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-group text-info"></i> Customers</span>
                             <h3 class="card-title text-nowrap mb-2">{{!empty($totalNoOfCustomers) ? $totalNoOfCustomers : 0}}</h3>
+                            <a href="{{route('admin.users.list', ['customers'])}}" class="btn btn-info rounded btn-xs">View More</a>
                         </div>
                     </div>
                 </div>
