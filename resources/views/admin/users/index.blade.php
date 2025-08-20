@@ -117,8 +117,8 @@
                         @endif
                         @if(request()->route('type') == 'customers')
                         {
-                            name: 'services_count',
-                            data: 'services_count'
+                            name: 'total_services',
+                            data: 'total_services'
                         },
                         @endif
                         {
