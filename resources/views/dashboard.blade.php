@@ -120,7 +120,7 @@
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Discounts</span>
                             <h3 class="card-title text-nowrap mb-2">Rs {{!empty($salesSummary) ? number_format($salesSummary->total_discounts, 2) : 0}}</h3>
-                            <a href="{{route('admin.services.list')}}" class="btn btn-danger rounded btn-xs">View More</a>
+                            <a href="{{route('admin.services.list')}}" class="btn btn-warning rounded btn-xs">View More</a>
                         </div>
                     </div>
                 </div>
@@ -139,6 +139,79 @@
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-group text-info"></i> Customers</span>
                             <h3 class="card-title text-nowrap mb-2">{{!empty($totalNoOfCustomers) ? $totalNoOfCustomers : 0}}</h3>
                             <a href="{{route('admin.users.list', ['customers'])}}" class="btn btn-info rounded btn-xs">View More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                        <h5 class="text-decoration-underline text-white bg-danger rounded p-2">Expenses</h5>
+                            <div class="table-responsive" style="height: 400px">
+                                <table class="table table-striped table-hover w-100">
+                                    <thead>
+                                        <th>Date</th>
+                                        <th>Expense Name</th>
+                                        <th>Detail</th>
+                                        <th>Amount</th>
+                                    </thead>
+                                    <tbody>
+                                        @foreach(\App\Models\Expense::orderBy('created_at', 'desc')->get() as $expense)
+                                        <tr>
+                                            <td>{{\Carbon\Carbon::parse($expense->created_at)->format('d M, Y')}}</td>
+                                            <td>{{$expense->name}}</td>
+                                            <td>{{$expense->description}}</td>
+                                            <td>{{$expense->amount}}</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                        <h5 class="text-decoration-underline text-white bg-primary rounded p-2">Top 10 Returning Customers</h5>
+                            <div class="table-responsive" style="height: 400px">
+                                <table class="table table-striped table-hover w-100">
+                                    <thead>
+                                        <th>Customer Name</th>
+                                        <th>Vehicle (Reg/Name)</th>
+                                        <th>Services</th>
+                                    </thead>
+                                    <tbody>
+                                        @php  
+                                            $users = \App\Models\User::where('user_type', 3)
+                                            ->with(['vehicles.services']) // load vehicles and their services
+                                            ->get()
+                                            ->map(function ($user) {
+                                                // count total services across all vehicles
+                                                $user->total_services = $user->vehicles->sum(fn($v) => $v->services->count());
+                                                return $user;
+                                            })
+                                            ->sortByDesc('total_services') // sort collection by total services
+                                            ->take(10); // get top 10
+                                        @endphp
+                                        @foreach($users as $user)
+                                            <tr>
+                                                <td>{{ $user->name }}</td>
+                                                <td>
+                                                    @if($user->vehicles->isNotEmpty())
+                                                        {{ $user->vehicles->first()->registration_number }}
+                                                        ({{ $user->vehicles->first()->name }})
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>{{ $user->total_services }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
