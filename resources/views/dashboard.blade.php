@@ -149,7 +149,7 @@
                         <div class="card-body">
                         <h5 class="text-decoration-underline text-white bg-danger rounded p-2">Expenses</h5>
                             <div class="table-responsive" style="height: 400px">
-                                <table class="table table-striped table-hover w-100">
+                                <table class="table table-striped table-bordered table-hover w-100">
                                     <thead>
                                         <th>Date</th>
                                         <th>Expense Name</th>
@@ -176,7 +176,7 @@
                         <div class="card-body">
                         <h5 class="text-decoration-underline text-white bg-primary rounded p-2">Top 10 Returning Customers</h5>
                             <div class="table-responsive" style="height: 400px">
-                                <table class="table table-striped table-hover w-100">
+                                <table class="table table-striped table-bordered table-hover w-100">
                                     <thead>
                                         <th>Customer Name</th>
                                         <th>Vehicle (Reg/Name)</th>
