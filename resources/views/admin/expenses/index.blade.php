@@ -86,10 +86,11 @@ $(document).ready(function() {
                     data: 'actions'
                 },
             ],
-            createdRow: function(row, data, dataIndex) {
-                var index = dataIndex + 1; // Start from 1
-                $('td', row).eq(0).text(index); // Update the first cell of the row
-            }
+                createdRow: function(row, data, dataIndex) {
+                    var info = table.page.info(); 
+                    var index = info.start + dataIndex + 1; // 👈 offset by current page
+                    $('td', row).eq(0).text(index);
+                }
         });
         // After initializing DataTables, call feather.replace()
         table.on('draw', function() {
