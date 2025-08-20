@@ -272,6 +272,7 @@
         $(document).on('click', '.complain-checkbox', function() {
             var _this = $(this);
             var _serviceId = _this.attr('data-service-id');
+            @if (Auth::user()->hasRole(['admin', 'manager']))
             $.ajax({
                 url: "{{ route('admin.services.complaint') }}",
                 method: "POST",
@@ -285,13 +286,14 @@
                     }
                 }
             });
+            @endif
         });
 
         $(document).on('change', '.payment-mode-update', function() {
             var _this = $(this);
             var _serviceId = _this.data('service-id');
             var _paymentMode = _this.val(); // 👈 correct way
-
+            @if (Auth::user()->hasRole(['admin', 'manager']))
             $.ajax({
                 url: "{{ route('admin.services.update_payment_mode') }}",
                 method: "POST",
@@ -306,6 +308,7 @@
                     }
                 }
             });
+            @endif
         });
     });
 </script>
