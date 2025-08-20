@@ -74,6 +74,10 @@ Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
             Route::get('/trashed', [ServiceController::class, 'trashed'])->name('admin.services.trashed');
             Route::get('/restore/{id}', [ServiceController::class, 'restore'])->name('admin.services.restore')->middleware('role:admin');
             Route::post('/export', [ServiceController::class, 'export'])->name('admin.services.export');
+
+
+            Route::post('/update-payment-mode', [ServiceController::class, 'updatePaymentMode'])->name('admin.services.update_payment_mode');
+            Route::post('/complaint', [ServiceController::class, 'complaint'])->name('admin.services.complaint');
         });
         //Expenses Routes
         Route::group(['prefix' => '/expenses'], function () {

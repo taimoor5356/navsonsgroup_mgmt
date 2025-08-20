@@ -268,6 +268,45 @@
                 $(this).val('');
             });
         });
+
+        $(document).on('click', '.complain-checkbox', function() {
+            var _this = $(this);
+            var _serviceId = _this.attr('data-service-id');
+            $.ajax({
+                url: "{{ route('admin.services.complaint') }}",
+                method: "POST",
+                data: {
+                    _token: "{{csrf_token()}}",
+                    service_id: _serviceId
+                },
+                success:function(response) {
+                    if (response.status == true) {
+                        table.draw(false);
+                    }
+                }
+            });
+        });
+
+        $(document).on('change', '.payment-mode-update', function() {
+            var _this = $(this);
+            var _serviceId = _this.data('service-id');
+            var _paymentMode = _this.val(); // 👈 correct way
+
+            $.ajax({
+                url: "{{ route('admin.services.update_payment_mode') }}",
+                method: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    service_id: _serviceId,
+                    payment_mode_id: _paymentMode
+                },
+                success: function(response) {
+                    if (response.status === true) {
+                        table.draw(false);
+                    }
+                }
+            });
+        });
     });
 </script>
 @endsection

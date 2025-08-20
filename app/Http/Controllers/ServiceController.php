@@ -99,7 +99,15 @@ class ServiceController extends Controller
                 return '<input type="checkbox" data-user-id="'.$row->id.'" class="user-checkbox">';
             })
             ->addColumn('payment_mode', function ($row) {
-                return ucfirst($row->payment_mode?->name);
+                $paymentModes = \App\Models\PaymentMode::all();
+                $options = '<option value="" disabled>Payment Mode</option>';
+                foreach ($paymentModes as $mode) {
+                    $selected = $row->payment_mode_id == $mode->id ? 'selected' : '';
+                    $options .= '<option value="'.$mode->id.'" '.$selected.'>'.strtoupper(str_replace('_', ' ', $mode->name)).'</option>';
+                }
+
+                return '<select class="payment-mode-update" 
+                                data-service-id="'.$row->id.'">'.$options.'</select>';
             })
             ->addColumn('vehicle_name', function ($row) {
                 return ucwords($row->vehicle?->name);
@@ -126,7 +134,7 @@ class ServiceController extends Controller
                 return $row->vehicle?->user?->phone;
             })
             ->addColumn('complaint', function ($row) {
-                return $row->complaint == 1 ? '<span class="bg-danger p-1 text-white">YES<span/>' : 'No';
+                return '<input type="checkbox" class="complain-checkbox" data-service-id="'.$row->id.'" '.($row->complain == 1 ? 'checked' : '').'>';
             })
             ->addColumn('actions', function ($row) use ($trashed) {
                 $btns = '
@@ -152,7 +160,7 @@ class ServiceController extends Controller
                     }
                 return $btns;
             })
-            ->rawColumns(['sr_no', 'payment_status', 'email', 'name', 'role', 'actions'])
+            ->rawColumns(['sr_no', 'payment_status', 'email', 'payment_mode', 'name', 'role', 'complaint', 'actions'])
             ->setTotalRecords($totalRecords)
             ->setFilteredRecords($totalRecords) // For simplicity, same as totalRecords
             ->skipPaging()
@@ -351,6 +359,42 @@ class ServiceController extends Controller
                 'status' => true
             ]);
         } catch (\Exception $e) {
+            return response()->json([
+                'status' => false
+            ]);
+        }
+    }
+
+    public function updatePaymentMode(Request $request) {
+        $service = Service::where('id', $request->service_id)->first();
+        if (isset($service)) {
+            if ($service->collected_amount == 0 && $service->payment_status == 0) {
+                $service->payment_mode_id = $request->payment_mode_id;
+                $service->save();
+                return response()->json([
+                    'status' => true
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false
+                ]);
+            }
+        } else {
+            return response()->json([
+                'status' => false
+            ]);
+        }
+    }
+
+    public function complaint(Request $request) {
+        $service = Service::where('id', $request->service_id)->first();
+        if (isset($service)) {
+            $service->complain = !$service->complain;
+            $service->save();
+            return response()->json([
+                'status' => true
+            ]);
+        } else {
             return response()->json([
                 'status' => false
             ]);
