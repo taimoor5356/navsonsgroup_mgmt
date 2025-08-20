@@ -53,6 +53,9 @@ class ServiceController extends Controller
             ->editColumn('date', function ($row) {
                 return Carbon::parse($row->created_at)->format('d M, Y');
             })
+            ->editColumn('service_type', function ($row) {
+                return ucfirst($row->service_type?->name);
+            })
             ->editColumn('payment_status', function ($row) {
                 if ($row->payment_status == 1 && $row->collected_amount > 0) {
                     // Show only Paid badge
@@ -160,7 +163,7 @@ class ServiceController extends Controller
         //
         $data['header_title'] = 'Services List';
         if ($request->ajax()) {
-            $data['records'] = Service::with('vehicle.user', 'payment_mode')
+            $data['records'] = Service::with('vehicle.user', 'payment_mode', 'service_type')
                                 ->orderBy('payment_status', 'asc')   // unpaid (0) first, paid (1) later
                                 ->orderBy('created_at', 'desc');     // then latest first
             return $this->datatables($request, $data);

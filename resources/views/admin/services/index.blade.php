@@ -57,6 +57,7 @@
                             <th>Date</th>
                             <th>Payment Status</th>
                             <th>Vehicle Registration Number</th>
+                            <th>Service Type</th>
                             <th>Charges</th>
                             <th>Collected Amount</th>
                             <th>Discount</th>
@@ -118,6 +119,10 @@
                     {
                         name: 'vehicle_registration_number',
                         data: 'vehicle_registration_number'
+                    },
+                    {
+                        name: 'service_type',
+                        data: 'service_type'
                     },
                     {
                         name: 'charges',
