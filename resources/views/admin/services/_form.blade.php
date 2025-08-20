@@ -161,7 +161,7 @@
             </div>
         </label>
         <div class="input-group">
-            <input type="datetime-local" name="date" id="date" class="form-control">
+            <input type="date" name="date" id="date" class="form-control">
         </div>
     </div>
 </div>
