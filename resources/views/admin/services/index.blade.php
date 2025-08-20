@@ -67,7 +67,7 @@
                             <th>Luster</th>
                             <th>Vaccum</th>
                             <th>Diesel</th>
-                            <th>Complaint</th>
+                            <th>Complain</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
