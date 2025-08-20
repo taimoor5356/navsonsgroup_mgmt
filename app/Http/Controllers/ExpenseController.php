@@ -30,6 +30,9 @@ class ExpenseController extends Controller
             ->editColumn('sr_no', function ($row) {
                 return $row->id;
             })
+            ->addColumn('date', function ($row) {
+                return Carbon::parse($row->created_at)->format('d M, Y');
+            })
             ->addColumn('expense_type', function ($row) {
                 return ucwords(str_replace('_', ' ', $row->expenseType?->name));
             })

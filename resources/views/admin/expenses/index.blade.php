@@ -23,6 +23,7 @@
                     <thead>
                         <tr class="text-nowrap">
                             <th>#</th>
+                            <th>Date</th>
                             <th>Expense Type</th>
                             <th>Name</th>
                             <th>Total Expense</th>
@@ -65,6 +66,10 @@ $(document).ready(function() {
                     name: 'sr_no',
                     data: 'sr_no',
                     orderable: false
+                },
+                {
+                    name: 'date',
+                    data: 'date'
                 },
                 {
                     name: 'expense_type',
