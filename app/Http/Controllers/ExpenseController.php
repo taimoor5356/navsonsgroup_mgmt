@@ -8,6 +8,7 @@ use App\Models\ExpenseType;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use DataTables;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ExpenseController extends Controller
@@ -49,15 +50,17 @@ class ExpenseController extends Controller
                 $btns = '
                     <div class="actionb-btns-menu d-flex justify-content-center">';
                     if ($trashed == null) {
-                        // $btns .= '<a class="btn btns m-0 p-1" data-user-id="'.$row->id.'" href="expenses/edit/'.$row->id.'">
-                        //         <i class="align-middle text-primary" data-feather="edit">
-                        //         </i>
-                        //     </a>
-                        //     <a class="btn btns m-0 p-1 delete-user" data-user-id="'.$row->id.'" href="#">
-                        //         <i class="align-middle text-danger" data-feather="trash-2">
-                        //         </i>
-                        //     </a>
-                        // </div>';
+                        if (Auth::user()->id == 1) {
+                            $btns .= '<a class="btn btns m-0 p-1" data-user-id="'.$row->id.'" href="edit/'.$row->id.'">
+                                    <i class="align-middle text-primary" data-feather="edit">
+                                    </i>
+                                </a>
+                                <a class="btn btns m-0 p-1 delete-user" data-user-id="'.$row->id.'" href="#">
+                                    <i class="align-middle text-danger" data-feather="trash-2">
+                                    </i>
+                                </a>
+                            </div>';
+                        }
                     } else {
                         // $btns.= '<a class="btn btns m-0 p-1" href="restore/' . $row->id . '">
                         //         <i class="align-middle text-success" data-feather="refresh-cw">
@@ -153,6 +156,10 @@ class ExpenseController extends Controller
     public function edit(string $id)
     {
         //
+        $data['header_title'] = 'Edit Expense';
+        $data['expenseTypes'] = ExpenseType::get();
+        $data['record'] = Expense::where('id', $id)->first();
+        return view('admin.expenses.edit', $data);
     }
 
     /**
@@ -161,6 +168,39 @@ class ExpenseController extends Controller
     public function update(Request $request, string $id)
     {
         //
+        $request->validate([
+            'name' => 'required',
+            'expense_type_id' => 'required',
+            'amount' => 'required|integer',
+            'description' => 'required',
+            'payment_mode_id' => 'required',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            Expense::where('id', $id)->update([
+                'name' => $request->name,
+                'user_id' => !empty($request->user_id) ? $request->user_id : null,
+                'expense_type_id' => $request->expense_type_id,
+                'amount' => $request->amount,
+                'description' => $request->description,
+                'payment_mode_id' => $request->payment_mode_id,
+                'created_at' => !empty($request->date) ? Carbon::parse($request->date) : Carbon::now(),
+                'updated_at' => !empty($request->date) ? Carbon::parse($request->date) : Carbon::now(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Entry added successfully');
+            // return redirect()->route('admin.expenses.list')->with('success', 'Entry added successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            ErrorLog::create([
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->back()->with('error', 'Something went wrong');
+        }
     }
 
     /**

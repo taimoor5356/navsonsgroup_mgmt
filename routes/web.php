@@ -85,8 +85,8 @@ Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
             Route::get('/list', [ExpenseController::class, 'index'])->name('admin.expenses.list');
             Route::get('/create', [ExpenseController::class, 'create'])->name('admin.expenses.create');
             Route::post('/store', [ExpenseController::class, 'store'])->name('admin.expenses.store')->middleware('role:admin|manager');
-            Route::get('/customers/edit/{id}', [ExpenseController::class, 'edit'])->name('admin.expenses.edit');
-            Route::post('/update/{id}', [ExpenseController::class, 'update'])->name('admin.expenses.update')->middleware('role:admin|manager');
+            Route::get('/edit/{id}', [ExpenseController::class, 'edit'])->name('admin.expenses.edit');
+            Route::post('/update/{id}', [ExpenseController::class, 'update'])->name('admin.expenses.update')->middleware('role:admin');
             Route::post('/delete', [ExpenseController::class, 'destroy'])->name('admin.expenses.destroy')->middleware('role:admin');
 
             Route::post('/delete-multiple-expenses', [ExpenseController::class, 'deleteMultipleexpenses'])->name('delete_multiple_expenses')->middleware('role:admin');

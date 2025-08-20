@@ -9,7 +9,7 @@
             <select name="expense_type_id" id="expense_type_id" class="form-control">
                 <option value="" selected disabled>Expense Type</option>
                 @foreach (\App\Models\ExpenseType::get() as $expenseType)
-                    <option value="{{$expenseType->id}}">{{strtoupper(str_replace('_', ' ', $expenseType->name))}}</option>
+                    <option value="{{$expenseType->id}}" @isset($record){{$expenseType->id == $record->expense_type_id ? 'selected' : ''}}@endisset>{{strtoupper(str_replace('_', ' ', $expenseType->name))}}</option>
                 @endforeach
             </select>
         </div>
@@ -26,7 +26,7 @@
         <select name="user_id" id="user-id" class="form-control">
             <option value="" selected disabled>Select User</option>
             @foreach (\App\Models\User::where('user_type', 5)->get() as $user)
-                <option value="{{$user->id}}">{{$user->name}}</option>
+                <option value="{{$user->id}}" @isset($record){{$user->id == $record->user_id ? 'selected' : ''}}@endisset>{{$user->name}}</option>
             @endforeach
         </select>
     </div>
@@ -54,7 +54,7 @@
             <select name="payment_mode_id" id="payment_mode_id" class="form-control">
                 <option value="" selected disabled>Payment Mode</option>
                 @foreach (\App\Models\PaymentMode::get() as $paymentMode)
-                    <option value="{{$paymentMode->id}}">{{strtoupper(str_replace('_', ' ', $paymentMode->name))}}</option>
+                    <option value="{{$paymentMode->id}}" @isset($record){{$paymentMode->id == $record->payment_mode_id ? 'selected' : ''}}@endisset>{{strtoupper(str_replace('_', ' ', $paymentMode->name))}}</option>
                 @endforeach
             </select>
         </div>
@@ -62,7 +62,7 @@
     <div class="mb-3 col-md-4 col-12">
         <label class="form-label" for="date">Date</label>
         <div class="input-group input-group-merge">
-            <input type="datetime-local" value="{{isset($record) ? $record->date : ''}}" name="date" class="form-control" id="date" placeholder="Enter date" aria-label="description" aria-describedby="description2">
+            <input type="datetime-local" value="{{isset($record) ? $record->created_at : ''}}" name="date" class="form-control" id="date" placeholder="Enter date" aria-label="description" aria-describedby="description2">
         </div>
     </div>
 </div>

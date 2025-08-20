@@ -11,7 +11,7 @@
             <form method="POST" action="{{url('admin/expenses/update', [$record->id])}}">
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Edit Group</h5>
+                        <h5 class="mb-0">Edit Expense</h5>
                     </div>
                     <div class="card-body">
                             @csrf
