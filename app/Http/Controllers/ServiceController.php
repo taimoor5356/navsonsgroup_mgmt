@@ -125,6 +125,9 @@ class ServiceController extends Controller
             ->addColumn('phone', function ($row) {
                 return $row->vehicle?->user?->phone;
             })
+            ->addColumn('complaint', function ($row) {
+                return $row->complaint == 1 ? '<span class="bg-danger p-1 text-white">YES<span/>' : 'No';
+            })
             ->addColumn('actions', function ($row) use ($trashed) {
                 $btns = '
                     <div class="actionb-btns-menu d-flex justify-content-center">';

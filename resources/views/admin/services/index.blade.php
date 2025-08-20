@@ -64,6 +64,7 @@
                             <th>Discount Reason</th>
                             <th>Payment Mode</th>
                             <th>Phone</th>
+                            <th>Complaint</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -147,6 +148,10 @@
                     {
                         name: 'phone',
                         data: 'phone'
+                    },
+                    {
+                        name: 'complaint',
+                        data: 'complaint'
                     },
                     {
                         className: 'text-center',
