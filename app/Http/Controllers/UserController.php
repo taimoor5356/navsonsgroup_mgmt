@@ -58,18 +58,20 @@ class UserController extends Controller
             ->addColumn('salary_left', function ($row) {
                 return number_format((25000 - $row->expenses?->sum('amount')), 2);
             })
-            ->addColumn('total_services', function ($row) {
-                $vehicle = $row->vehicles?->first();
-                if (isset($vehicle)) {
-                    if (count($vehicle->services) > 0) {
-                        return $vehicle->services->count();
-                    } else {
-                        return 0;
-                    }
-                } else {
-                    return 0;
-                }
-            })
+            ->addColumn('services_count', fn($row) => $row->services_count)
+            // ->addColumn('services_count', function ($row) {
+            //     return $row->services_count;
+            //     // $vehicle = $row->vehicles?->first();
+            //     // if (isset($vehicle)) {
+            //     //     if (count($vehicle->services) > 0) {
+            //     //         return $vehicle->services->count();
+            //     //     } else {
+            //     //         return 0;
+            //     //     }
+            //     // } else {
+            //     //     return 0;
+            //     // }
+            // })
             ->addColumn('phone', function ($row) {
                 return $row->phone;
             })
@@ -95,7 +97,7 @@ class UserController extends Controller
                     }
                 return $btns;
             })
-            ->rawColumns(['sr_no', 'name', 'total_services', 'phone', 'actions'])
+            ->rawColumns(['sr_no', 'name', 'services_count', 'phone', 'actions'])
             ->setTotalRecords($totalRecords)
             ->setFilteredRecords($totalRecords) // For simplicity, same as totalRecords
             ->skipPaging()
@@ -110,10 +112,11 @@ class UserController extends Controller
         $data['header_title'] = ucfirst($type). ' List';
         $data['userType'] = $type;
         if ($request->ajax()) {
-            $data['records'] = User::with('role', 'vehicles', 'expenses')
-                                ->when($type == 'customers', fn($q) => $q->customer())
-                                ->when($type == 'users', fn($q) => $q->user())
-                                ->orderBy('id', 'desc');
+            $data['records'] = User::with('role', 'vehicles.services', 'expenses')
+    ->withCount('services') // 👈 now valid, counts all services across all vehicles
+    ->when($type == 'customers', fn($q) => $q->customer())
+    ->when($type == 'users', fn($q) => $q->user())
+    ->orderBy('services_count', 'desc');
             return $this->datatables($request, $data);
         }
         return view('admin.users.index', $data);

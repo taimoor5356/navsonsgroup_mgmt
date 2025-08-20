@@ -82,6 +82,7 @@
                     },
                     pageLength: 100,       // show 100 records
                     lengthChange: false,   // hide "Show X entries" dropdown
+                    order: [], // 👈 important: disable client-side ordering
                     // paging: false,         // disable pagination
                     // info: false,            // hide "Showing X of Y entries"
                     columns: [{
@@ -116,8 +117,8 @@
                         @endif
                         @if(request()->route('type') == 'customers')
                         {
-                            name: 'total_services',
-                            data: 'total_services'
+                            name: 'services_count',
+                            data: 'services_count'
                         },
                         @endif
                         {

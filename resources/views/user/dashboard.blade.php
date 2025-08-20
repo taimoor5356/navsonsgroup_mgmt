@@ -66,6 +66,36 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <th>Expense Name</th>
+                                    <th>Detail</th>
+                                    <th>Amount</th>
+                                </thead>
+                                <tbody>
+                                    @foreach(\App\Models\Expense::where('user_id', Auth::user()->id)->get() as $expense)
+                                        <tr>
+                                            <td>
+                                                {{$expense->name}}
+                                            </td>
+                                            <td>
+                                                {{$expense->description}}
+                                            </td>
+                                            <td>
+                                                {{$expense->amount}}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
