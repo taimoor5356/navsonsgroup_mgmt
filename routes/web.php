@@ -78,6 +78,7 @@ Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
 
             Route::post('/update-payment-mode', [ServiceController::class, 'updatePaymentMode'])->name('admin.services.update_payment_mode');
             Route::post('/complaint', [ServiceController::class, 'complaint'])->name('admin.services.complaint');
+            Route::post('/update-additional-services', [ServiceController::class, 'updateAdditionalServices'])->name('admin.services.update_additional_services');
         });
         //Expenses Routes
         Route::group(['prefix' => '/expenses'], function () {

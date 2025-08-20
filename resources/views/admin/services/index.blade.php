@@ -61,9 +61,12 @@
                             <th>Charges</th>
                             <th>Collected Amount</th>
                             <th>Discount</th>
-                            <th>Discount Reason</th>
+                            <th>Description</th>
                             <th>Payment Mode</th>
                             <th>Phone</th>
+                            <th>Luster</th>
+                            <th>Vaccum</th>
+                            <th>Diesel</th>
                             <th>Complaint</th>
                             <th>Actions</th>
                         </tr>
@@ -148,6 +151,18 @@
                     {
                         name: 'phone',
                         data: 'phone'
+                    },
+                    {
+                        name: 'luster',
+                        data: 'luster'
+                    },
+                    {
+                        name: 'vaccum',
+                        data: 'vaccum'
+                    },
+                    {
+                        name: 'diesel',
+                        data: 'diesel'
                     },
                     {
                         name: 'complaint',
@@ -289,18 +304,30 @@
             @endif
         });
 
-        $(document).on('change', '.payment-mode-update', function() {
+        $(document).on('change', '.luster-service, .vaccum-service, .diesel-service, .complain, .payment-mode', function() {
             var _this = $(this);
             var _serviceId = _this.data('service-id');
-            var _paymentMode = _this.val(); // 👈 correct way
+
+            // detect which field triggered
+            var fieldName = '';
+            if (_this.hasClass('luster-service')) fieldName = 'luster';
+            else if (_this.hasClass('vaccum-service')) fieldName = 'vaccum';
+            else if (_this.hasClass('diesel-service')) fieldName = 'diesel';
+            else if (_this.hasClass('complain')) fieldName = 'complain';
+            else if (_this.hasClass('payment-mode') || _this.hasClass('payment-mode-update')) fieldName = 'payment_mode_id';
+
+            // value (for checkbox toggle use checked, for select use val)
+            var fieldValue = (_this.is(':checkbox')) ? (_this.is(':checked') ? 1 : 0) : _this.val();
+
             @if (Auth::user()->hasRole(['admin', 'manager']))
             $.ajax({
-                url: "{{ route('admin.services.update_payment_mode') }}",
+                url: "{{ route('admin.services.update_additional_services') }}",
                 method: "POST",
                 data: {
                     _token: "{{ csrf_token() }}",
                     service_id: _serviceId,
-                    payment_mode_id: _paymentMode
+                    field: fieldName,
+                    value: fieldValue
                 },
                 success: function(response) {
                     if (response.status === true) {

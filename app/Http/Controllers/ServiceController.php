@@ -106,7 +106,7 @@ class ServiceController extends Controller
                     $options .= '<option value="'.$mode->id.'" '.$selected.'>'.strtoupper(str_replace('_', ' ', $mode->name)).'</option>';
                 }
 
-                return '<select class="payment-mode-update" 
+                return '<select class="payment-mode-update payment-mode" 
                                 data-service-id="'.$row->id.'">'.$options.'</select>';
             })
             ->addColumn('vehicle_name', function ($row) {
@@ -136,6 +136,15 @@ class ServiceController extends Controller
             ->addColumn('complaint', function ($row) {
                 return '<input type="checkbox" class="complain-checkbox" data-service-id="'.$row->id.'" '.($row->complain == 1 ? 'checked' : '').'>';
             })
+            ->addColumn('luster', function ($row) {
+                return '<input type="checkbox" class="luster luster-service" data-service-id="'.$row->id.'" '.($row->luster == 1 ? 'checked' : '').'>';
+            })
+            ->addColumn('vaccum', function ($row) {
+                return '<input type="checkbox" class="vaccum vaccum-service" data-service-id="'.$row->id.'" '.($row->vaccum == 1 ? 'checked' : '').'>';
+            })
+            ->addColumn('diesel', function ($row) {
+                return '<input type="checkbox" class="diesel diesel-service" data-service-id="'.$row->id.'" '.($row->diesel == 1 ? 'checked' : '').'>';
+            })
             ->addColumn('actions', function ($row) use ($trashed) {
                 $btns = '
                     <div class="actionb-btns-menu d-flex justify-content-center">';
@@ -160,7 +169,7 @@ class ServiceController extends Controller
                     }
                 return $btns;
             })
-            ->rawColumns(['sr_no', 'payment_status', 'email', 'payment_mode', 'name', 'role', 'complaint', 'actions'])
+            ->rawColumns(['sr_no', 'payment_status', 'email', 'payment_mode', 'name', 'role', 'luster', 'vaccum', 'diesel', 'complaint', 'actions'])
             ->setTotalRecords($totalRecords)
             ->setFilteredRecords($totalRecords) // For simplicity, same as totalRecords
             ->skipPaging()
@@ -399,5 +408,20 @@ class ServiceController extends Controller
                 'status' => false
             ]);
         }
+    }
+
+    public function updateAdditionalServices(Request $request)
+    {
+        $service = Service::findOrFail($request->service_id);
+
+        $field = $request->input('field');
+        $value = $request->input('value');
+
+        if (in_array($field, ['luster','vaccum','diesel','complain','payment_mode_id'])) {
+            $service->{$field} = $value;
+            $service->save();
+        }
+
+        return response()->json(['status' => true]);
     }
 }

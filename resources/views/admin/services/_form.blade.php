@@ -97,10 +97,10 @@
         </div>
     </div>
     <div class="mb-3 col-md-6 col-12">
-        <label class="form-label" for="discount-reason">Discount Reason</label>
+        <label class="form-label" for="discount-reason">Description <small>(Discount Reason / Complain)</small></label>
         <div class="input-group input-group-merge">
             <span class="input-group-text"><i class="bx bx-file"></i></span>
-            <input type="text" name="discount_reason" value="{{isset($record) ? $discountReason : ''}}" id="discount-reason" class="form-control" placeholder="Friend, Permanent Customer, Neighbour" aria-label="Friend" aria-describedby="discount-reason2">
+            <input type="text" name="discount_reason" value="{{isset($record) ? $discountReason : ''}}" id="discount-reason" class="form-control" placeholder="Discount Reason or Complain" aria-label="Friend" aria-describedby="discount-reason2">
         </div>
     </div>
     <!-- <div class="mb-3 col-md-6 col-12">
