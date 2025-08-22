@@ -30,7 +30,7 @@
     <div class="card p-0">
         <div class="card-header">
             <div class="row">
-                <div class="col-md-2 col-sm-6 col-6 mb-2">
+                <div class="col-md-4 col-sm-6 col-6 mb-2">
                     <label for="dateRangePicker">Date Filter</label>
                     <input 
                         type="text" 
@@ -41,7 +41,7 @@
                         value="{{ request('date_range') }}"
                     >
                 </div>
-                <div class="col-md-2 col-sm-6 col-6 mb-2">
+                <div class="col-md-4 col-sm-6 col-6 mb-2">
                     <label for="payment-status">Payment Filter</label>
                     <select class="form-control" id="payment-status">
                         <option value="all" selected>Show All</option>
@@ -58,8 +58,8 @@
                         <tr class="text-nowrap">
                             <th>#</th>
                             <th>Date</th>
-                            <th>Payment Status</th>
-                            <th>Vehicle Registration Number</th>
+                            <th>Payment</th>
+                            <th>Vehicle Number</th>
                             <th>Service Type</th>
                             <th>Charges</th>
                             <th>Collected Amount</th>
