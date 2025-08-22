@@ -41,9 +41,11 @@ class ServiceController extends Controller
             $endDate = $filterDate[1];
             $records = $records->whereDate('created_at', '>=', $startDate)->whereDate('created_at', '<=', $endDate);
         }
-        if (!empty($request->payment_status) && $request->payment_status != 'all') {
+        if (!empty($request->payment_status)) {
             // Filter by payment status
-            if ($request->payment_status == 'paid') {
+            if ($request->payment_status == 'all') {
+                $records = $records;
+            } else if ($request->payment_status == 'paid') {
                 $records = $records->where('payment_status', 1);
             } else if ($request->payment_status == 'unpaid') {
                 $records = $records->where('payment_status', 0);
