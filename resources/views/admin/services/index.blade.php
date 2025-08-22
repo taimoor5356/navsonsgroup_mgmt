@@ -50,6 +50,11 @@
                     </select>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-2 col-sm-2 col-12 mb-2">
+                    <button class="btn btn-xs btn-primary rounded refresh-table p-2"><i class="text-white" data-feather="refresh-cw"></i></button>
+                </div>
+            </div>
         </div>
         <div class="card-body p-2">
             <div class="table-responsive text-nowrap">
@@ -191,6 +196,10 @@
         // After initializing DataTables, call feather.replace()
         table.on('draw', function() {
             feather.replace();
+        });
+
+        $('.refresh-table').on('click', function() {
+            table.draw(false); // redraw the table without resetting pagination
         });
 
         $(document).on('change', '#payment-status', function() {
