@@ -36,7 +36,7 @@
                         name="date_range" 
                         id="dateRangePicker" 
                         class="form-control" 
-                        placeholder="Select Date Range"
+                        placeholder="Filter Dates"
                         value="{{ request('date_range') }}"
                     >
                 </div>
