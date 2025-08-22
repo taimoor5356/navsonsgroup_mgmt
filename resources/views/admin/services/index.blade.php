@@ -44,7 +44,7 @@
                 <div class="col-md-3">
                     <label for="dateRangePicker">Payment Status</label>
                     <select class="form-control" id="payment-status">
-                        <option value="all">Show All</option>
+                        <option value="all" selected>Show All</option>
                         <option value="paid">Paid</option>
                         <option value="unpaid">Un-Paid</option>
                     </select>
