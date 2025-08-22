@@ -41,11 +41,14 @@
                         value="{{ request('date_range') }}"
                     >
                 </div>
-                <!-- <div class="col-md-3">
-                    <select name="" class="form-control" id="">
-                        <option value=""></option>
+                <div class="col-md-3">
+                    <label for="dateRangePicker">Payment Status</label>
+                    <select class="form-control" id="payment-status">
+                        <option value="">Show All</option>
+                        <option value="paid">Paid</option>
+                        <option value="unpaid">Un-Paid</option>
                     </select>
-                </div> -->
+                </div>
             </div>
         </div>
         <div class="card-body p-2">
@@ -102,6 +105,7 @@
                     url: "{{route('admin.services.list')}}",
                     data: function (d) {
                         d.date_range = $('#dateRangePicker').val();
+                        d.payment_status = $('#payment-status').val();
                     }
                 },
                 pageLength: 25,       // show 100 records
@@ -187,6 +191,10 @@
         // After initializing DataTables, call feather.replace()
         table.on('draw', function() {
             feather.replace();
+        });
+
+        $(document).on('change', '#payment-status', function() {
+            table.draw(false); // redraw the table with new filter
         });
 
         $(document).on('click', '#check-all', function() {

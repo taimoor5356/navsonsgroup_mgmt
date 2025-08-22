@@ -41,6 +41,13 @@ class ServiceController extends Controller
             $endDate = $filterDate[1];
             $records = $records->whereDate('created_at', '>=', $startDate)->whereDate('created_at', '<=', $endDate);
         }
+        if ($request->payment_status == 'unpaid') {
+            $records = $records->where('payment_status', 0);
+        } else if ($request->payment_status == 'paid') {
+            $records = $records->where('payment_status', 1);
+        } else {
+            $records = $records->where('payment_status', 1);
+        }
         $totalRecords = $records->count(); // Get the total number of records for pagination
         $data = $records->skip($request->start)
             ->take($request->length)
