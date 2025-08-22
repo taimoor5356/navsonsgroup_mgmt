@@ -103,4 +103,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Expense::class, 'user_id', 'id');
     }
+    
+    public function fines()
+    {
+        return $this->hasMany(Fine::class, 'user_id', 'id');
+    }
 }

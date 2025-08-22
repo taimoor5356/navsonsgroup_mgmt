@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DetailedReportController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\FineController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PreviousPaymentController;
 use App\Http\Controllers\ServiceController;
@@ -38,6 +39,9 @@ Route::post('/register', [AuthController::class, 'postRegister'])->name('post_re
 Route::get('/logout', [AuthController::class, 'logout'])->name('postlogout');
 
 Route::post('search-vehicle', [VehicleController::class, 'searchVehicleByNumber'])->name('search_vehicle_by_number');
+
+Route::get('/brands', [VehicleController::class, 'brands'])->name('brands');
+Route::get('/models', [VehicleController::class, 'models'])->name('models');
 
 Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
     //Admin Routes
@@ -93,6 +97,20 @@ Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
             Route::get('/trashed', [ExpenseController::class, 'trashed'])->name('admin.expenses.trashed');
             Route::get('/restore/{id}', [ExpenseController::class, 'restore'])->name('admin.expenses.restore')->middleware('role:admin');
             Route::post('/export', [ExpenseController::class, 'export'])->name('admin.expenses.export');
+        });
+        //Fines Routes
+        Route::group(['prefix' => '/fines'], function () {
+            Route::get('/list', [FineController::class, 'index'])->name('admin.fines.list');
+            Route::get('/create', [FineController::class, 'create'])->name('admin.fines.create');
+            Route::post('/store', [FineController::class, 'store'])->name('admin.fines.store')->middleware('role:admin|manager');
+            Route::get('/edit/{id}', [FineController::class, 'edit'])->name('admin.fines.edit');
+            Route::post('/update/{id}', [FineController::class, 'update'])->name('admin.fines.update')->middleware('role:admin');
+            Route::post('/delete', [FineController::class, 'destroy'])->name('admin.fines.destroy')->middleware('role:admin');
+
+            Route::post('/delete-multiple-fines', [FineController::class, 'deleteMultiplefines'])->name('delete_multiple_fines')->middleware('role:admin');
+            Route::get('/trashed', [FineController::class, 'trashed'])->name('admin.fines.trashed');
+            Route::get('/restore/{id}', [FineController::class, 'restore'])->name('admin.fines.restore')->middleware('role:admin');
+            Route::post('/export', [FineController::class, 'export'])->name('admin.fines.export');
         });
         //ACL Routes
         Route::group(['prefix' => '/acl'], function () {

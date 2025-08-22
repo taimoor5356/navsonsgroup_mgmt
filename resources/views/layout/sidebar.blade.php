@@ -74,6 +74,12 @@
         </li>
       </ul>
     </li>
+    <li class="menu-item @if(Request::url() == url('admin/fines/list') || Request::url() == url('admin/fines/create') || Request::segment(2) == 'fines') active @endif">
+      <a href="{{url('admin/fines/list')}}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-cut"></i>
+        <div data-i18n="Basic">Fines</div>
+      </a>
+    </li>
 
     <!-- Forms & Tables -->
     <li class="menu-header small text-uppercase"><span class="menu-header-text">Access Control List (ACL)</span></li>

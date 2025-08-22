@@ -60,8 +60,16 @@
                 <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
                     <div class="card">
                         <div class="card-body">
+                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Fine</span>
+                            <h3 class="card-title text-nowrap mb-2">Rs {{ number_format($record->fines->sum('amount'), 2) }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-warning"></i> Salary Remaining</span>
-                            <h3 class="card-title text-nowrap mb-2">Rs {{number_format((25000 - $record->expenses->sum('amount')), 2)}}</h3>
+                            <h3 class="card-title text-nowrap mb-2">Rs {{number_format((25000 - $record->expenses->sum('amount') - $record->fines->sum('amount')), 2)}}</h3>
                         </div>
                     </div>
                 </div>
@@ -70,6 +78,7 @@
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-body">
+                            <h4>Expenses / Loans</h4>
                             <table class="table table-bordered">
                                 <thead>
                                     <th>Date</th>
@@ -91,6 +100,41 @@
                                             </td>
                                             <td>
                                                 {{$expense->amount}}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4>Fines</h4>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <th>Date</th>
+                                    <th>Vehicle Name</th>
+                                    <th>Reason</th>
+                                    <th>Fine Amount</th>
+                                </thead>
+                                <tbody>
+                                    @foreach(\App\Models\Fine::where('user_id', Auth::user()->id)->get() as $fine)
+                                        <tr>
+                                            <td>
+                                                {{\Carbon\Carbon::parse($fine->created_at)->format('d M, Y')}}
+                                            </td>
+                                            <td>
+                                                {{$fine->vehicle?->name}}
+                                            </td>
+                                            <td>
+                                                {{$fine->reason}}
+                                            </td>
+                                            <td>
+                                                {{$fine->amount}}
                                             </td>
                                         </tr>
                                     @endforeach

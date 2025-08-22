@@ -1,3 +1,16 @@
+@section('_styles')
+    <style>
+        #brandList {
+        border-radius: 0 0 .375rem .375rem; /* rounded bottom corners */
+        }
+        #brandList .list-group-item {
+            cursor: pointer;
+        }
+        #brandList .list-group-item:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+@endsection
 <div class="row">
     @php
         $diesel = 0;
@@ -50,13 +63,28 @@
             </a>
         </div>
     </div>
-    <div class="mb-3 col-md-6 col-12 vehicle-name-info">
-        <label class="form-label" for="vehicle-name">Vehicle Name</label>
+    <div class="mb-3 col-md-6 col-12 position-relative">
+        <label class="form-label" for="brandInput">Enter brand name</label>
         <div class="input-group input-group-merge">
-            <span id="vehicle-name2" class="input-group-text"><i class="bx bx-car"></i></span>
-            <input type="text" name="vehicle_name" value="{{isset($record) ? $vehicleName : ''}}" class="form-control" id="vehicle-name" placeholder="Enter Vehicle Name" aria-label="John Doe" aria-describedby="vehicle-name2">
+            <span class="input-group-text"><i class="bx bx-car"></i></span>
+            <input type="text" id="brandInput" class="form-control" placeholder="Enter brand">
+        </div>
+
+        <!-- Suggestions Dropdown -->
+        <div id="brandList" 
+            class="list-group position-absolute w-100 shadow-sm" 
+            style="z-index: 1050; max-height: 200px; overflow-y: auto;">
         </div>
     </div>
+    <div class="mb-3 col-md-6 col-12">
+            <label for="">Enter brand name</label>
+            
+        <!-- <div class="input-group input-group-merge">
+            <span id="vehicle-name2" class="input-group-text"><i class="bx bx-car"></i></span>
+            <input type="text" name="vehicle_name" value="{{isset($record) ? $vehicleName : ''}}" class="form-control" id="vehicle-name" placeholder="Enter Vehicle Name" aria-label="John Doe" aria-describedby="vehicle-name2">
+        </div> -->
+    </div>
+    
     <div class="mb-3 col-md-6 col-12">
         <label class="form-label d-flex justify-content-between align-items-center" for="service_type">
             <div>
@@ -209,6 +237,66 @@
         $(document).on("keyup", "#vehicle-registration-number", function() {
             $(this).val($(this).val().replace(/ /g, "-"));
         });
+
+
+        $(function(){
+            let selectedBrand = null;
+
+            // Brand Autocomplete
+            $('#brandInput').on('keyup', function(){
+                let query = $(this).val();
+                if(query.length > 0){
+                    $.getJSON("{{ route('brands') }}", function(brands){
+                        $('#brandList').empty();
+                        brands.filter(b => b.toLowerCase().includes(query.toLowerCase()))
+                            .forEach(b => {
+                                $('#brandList').append(
+                                    `<a href="#" class="list-group-item list-group-item-action brand-item">${b}</a>`
+                                );
+                            });
+                    });
+                } else {
+                    $('#brandList').empty();
+                }
+            });
+
+            // Select Brand
+            $(document).on('click', '.brand-item', function(e){
+                e.preventDefault();
+                selectedBrand = $(this).text();
+                $('#brandInput').val(selectedBrand);
+                $('#brandList').empty();
+
+                // Enable model input
+                $('#modelInput').prop('disabled', false).val('');
+            });
+
+            // Model Autocomplete (after brand selected)
+            $('#modelInput').on('keyup', function(){
+                let query = $(this).val();
+                if(selectedBrand && query.length > 0){
+                    $.getJSON("{{ route('models') }}", { brand: selectedBrand }, function(models){
+                        $('#modelList').empty();
+                        models.filter(m => m.toLowerCase().includes(query.toLowerCase()))
+                            .forEach(m => {
+                                $('#modelList').append(
+                                    `<a href="#" class="list-group-item list-group-item-action model-item">${m}</a>`
+                                );
+                            });
+                    });
+                } else {
+                    $('#modelList').empty();
+                }
+            });
+
+            // Select Model
+            $(document).on('click', '.model-item', function(e){
+                e.preventDefault();
+                $('#modelInput').val($(this).text());
+                $('#modelList').empty();
+            });
+        });
+
    }); 
 </script>
 @endsection
