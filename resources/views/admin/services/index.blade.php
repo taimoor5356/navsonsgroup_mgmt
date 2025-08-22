@@ -31,6 +31,7 @@
         <div class="card-header">
             <div class="row">
                 <div class="col-md-2 col-sm-6 col-6 mb-2">
+                    <label for="dateRangePicker">Date Filter</label>
                     <input 
                         type="text" 
                         name="date_range" 
@@ -41,6 +42,7 @@
                     >
                 </div>
                 <div class="col-md-2 col-sm-6 col-6 mb-2">
+                    <label for="payment-status">Payment Filter</label>
                     <select class="form-control" id="payment-status">
                         <option value="all" selected>Show All</option>
                         <option value="paid">Paid</option>
