@@ -63,26 +63,12 @@
             </a>
         </div>
     </div>
-    <div class="mb-3 col-md-6 col-12 position-relative">
-        <label class="form-label" for="brandInput">Enter brand name</label>
-        <div class="input-group input-group-merge">
-            <span class="input-group-text"><i class="bx bx-car"></i></span>
-            <input type="text" id="brandInput" class="form-control" placeholder="Enter brand">
-        </div>
-
-        <!-- Suggestions Dropdown -->
-        <div id="brandList" 
-            class="list-group position-absolute w-100 shadow-sm" 
-            style="z-index: 1050; max-height: 200px; overflow-y: auto;">
-        </div>
-    </div>
     <div class="mb-3 col-md-6 col-12">
-            <label for="">Enter brand name</label>
-            
-        <!-- <div class="input-group input-group-merge">
+        <label class="form-label" for="vehicle-name">Vehicle Name</label>
+        <div class="input-group input-group-merge">
             <span id="vehicle-name2" class="input-group-text"><i class="bx bx-car"></i></span>
             <input type="text" name="vehicle_name" value="{{isset($record) ? $vehicleName : ''}}" class="form-control" id="vehicle-name" placeholder="Enter Vehicle Name" aria-label="John Doe" aria-describedby="vehicle-name2">
-        </div> -->
+        </div>
     </div>
     
     <div class="mb-3 col-md-6 col-12">
