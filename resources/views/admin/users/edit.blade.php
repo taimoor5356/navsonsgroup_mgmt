@@ -1,9 +1,6 @@
 @extends('layout.app')
 @section('_styles')
-
-<link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
 <style>
-    
     .select2-container .select2-selection--single {
         display: block;
         width: 100%;
@@ -59,36 +56,8 @@
 @endsection
 
 @section('_scripts')
-
-<script src="{{asset('plugins/select2/js/select2.full.min.js')}}"></script>
 <script>
     $(document).ready(function() {
-        $('.select2').select2({
-            placeholder: 'Select',
-            allowClear: true
-        });
-        
-        function toggleInputs() {
-            if ($('#input-npi-number').is(':checked')) {
-                $('#select-input-provider-npi').hide();
-                $('#provider_npi').prop('disabled', true);
-                $('#input-input-provider-npi').show();
-                $('#input-input-provider-npi input').prop('disabled', false);
-            } else {
-                $('#select-input-provider-npi').show();
-                $('#provider_npi').prop('disabled', false);
-                $('#input-input-provider-npi').hide();
-                $('#input-input-provider-npi input').prop('disabled', true);
-            }
-        }
-
-        // Initial state based on the checkbox
-        toggleInputs();
-
-        // Event listener for checkbox toggle
-        $('#input-npi-number').change(function() {
-            toggleInputs();
-        });
     });
 </script>
 @endsection

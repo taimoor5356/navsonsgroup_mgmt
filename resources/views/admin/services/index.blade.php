@@ -1,7 +1,5 @@
 @extends('layout.app')
 @section('_styles')
-<link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
     .butns {
         width: auto !important;
@@ -92,9 +90,6 @@
 @endsection
 
 @section('_scripts')
-<script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 <script>
     $(document).ready(function() {
         var table = $('table'); // Select the table element
@@ -279,27 +274,6 @@
             }, 1000);
         });
         @endif
-
-        $(function() {
-            $('#dateRangePicker').daterangepicker({
-                autoUpdateInput: false,     // don’t fill until user selects
-                locale: {
-                    cancelLabel: 'Clear',
-                    format: 'YYYY-MM-DD'    // format for backend
-                }
-            });
-
-            // Set the selected value into the input
-            $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
-                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-                table.draw(false);
-            });
-
-            // Clear on cancel
-            $('#dateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
-                $(this).val('');
-            });
-        });
 
         $(document).on('click', '.complain-checkbox', function() {
             var _this = $(this);

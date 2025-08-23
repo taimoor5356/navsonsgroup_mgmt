@@ -42,7 +42,6 @@
       rel="stylesheet"
     />
 
-    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <!-- Icons. Uncomment required icon fonts -->
     <link rel="stylesheet" href="{{asset('assets/vendor/fonts/boxicons.css')}}" />
 
@@ -55,10 +54,18 @@
 
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="{{asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css')}}" />
-
+    <!-- ApexCharts CSS -->
     <link rel="stylesheet" href="{{asset('assets/vendor/libs/apex-charts/apex-charts.css')}}" />
-    
+    <!-- Date Range Picker CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+
     @yield('_styles')
     <style>
       .position-relative {
@@ -135,9 +142,20 @@
     <!-- Core JS -->
     <!-- build:js assets/vendor/js/core.js -->
     <script src="{{asset('assets/vendor/libs/jquery/jquery.js')}}"></script>
-    
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+    <!-- Feather Icons JS -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Moment.js (required for formatting) -->
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <!-- Date Range Picker JS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
     <script src="{{asset('assets/vendor/libs/popper/popper.js')}}"></script>
     <script src="{{asset('assets/vendor/js/bootstrap.js')}}"></script>
     <script src="{{asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js')}}"></script>
@@ -156,59 +174,47 @@
 
     <!-- Place this tag in your head or just before your close body tag. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
-    <script>
-      // Enable pusher logging - don't include this in production
-      Pusher.logToConsole = true;
 
-      var pusher = new Pusher('749fe8beaacad593048d', {
-        cluster: 'ap1'
+    <script>
+      // Select2 initialization
+      $(document).ready(function() {
+        $('.select2').select2({
+            placeholder: 'Select',
+            allowClear: true
+        });
       });
 
-      var channel = pusher.subscribe('my-channel');
-      channel.bind('my-event', function(data) {
-        // $('#alert-message-notification').html(`<div class="alert alert-success alert-message-badge" role="alert">${data}</div>`);
+      // Date range picker
+      $(function() {
+          $('#dateRangePicker').daterangepicker({
+              autoUpdateInput: false,
+              locale: {
+                  cancelLabel: 'Clear',
+                  format: 'YYYY-MM-DD'
+              },
+              ranges: {
+                  'Today': [moment(), moment()],
+                  'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                  'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                  'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                  'This Month': [moment().startOf('month'), moment().endOf('month')],
+                  'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+              }
+          });
+
+          // Set the selected value into the input
+          $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
+              $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+          });
+
+          // Clear on cancel
+          $('#dateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
+              $(this).val('');
+          });
       });
 
       (function() {
-        function checkCount() {
-          $.ajax({
-            url: "{{url('get-notifications')}}",
-            method: 'POST',
-            data: {
-              _token: "{{csrf_token()}}",
-            },
-            success: function (res) {
-            //   if (res.status == true) {
-            //     if (res.import_notification == 1) {
-            //       $('.alert-mesg').html(`
-            //  <div class="alert alert-success alert-message-badge m-4" role="alert">
-            //       File imported successfully
-            //   </div>`);
-            //     }
-            //     if (res.user_sync_notification == 1) {
-            //       $('.alert-mesg').html(`
-            //  <div class="alert alert-success alert-message-badge m-4" role="alert">
-            //       Users synchronization has been successfully completed
-            //   </div>`);
-            //     }
-            //   }
-            }
-          });
-        }
-        // checkCount();
-        $('.date_range_picker').daterangepicker({
-          autoUpdateInput: false,      
-          locale: {
-              cancelLabel: 'Clear'
-          }
-        }).on('apply.daterangepicker', function(ev, picker) {
-            var startDate = picker.startDate ? picker.startDate.format('YYYY/MM/DD') : '';
-            var endDate = picker.endDate ? picker.endDate.format('YYYY/MM/DD') : '';
-            $(this).val(startDate + ' - ' + endDate).trigger('change');
-        }).on('cancel.daterangepicker', function(ev, picker) {
-            $(this).val('').trigger('change');
-        });
-        $('.date_range_picker').val('');
+
         let idleTime = 0;
 
         function timerIncrement() {
@@ -229,9 +235,6 @@
         setTimeout(() => {
           $('.alert-message-badge').hide();
         }, 5000);
-        // setInterval(function() {
-        //   // checkCount();
-        // }, 2000);
       8})();
     </script>
     @yield('_scripts')

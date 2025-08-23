@@ -1,12 +1,5 @@
 @extends('layout.app')
 @section('_styles')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<!-- Moment.js (required for formatting) -->
-<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-
-<!-- Date Range Picker CSS + JS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
-<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 
 <style type="text/css">
     .select2-container .select2-selection--single {
@@ -224,28 +217,5 @@
 
 @section('_scripts')
 <script>
-    $(document).ready(function() {
-        $('select').select2();
-        $(function() {
-            $('#dateRangePicker').daterangepicker({
-                autoUpdateInput: false,     // don’t fill until user selects
-                locale: {
-                    cancelLabel: 'Clear',
-                    format: 'YYYY-MM-DD'    // format for backend
-                }
-            });
-
-            // Set the selected value into the input
-            $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
-                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-            });
-
-            // Clear on cancel
-            $('#dateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
-                $(this).val('');
-            });
-        });
-    });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 @endsection

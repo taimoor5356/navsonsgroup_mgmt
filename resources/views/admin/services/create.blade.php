@@ -1,9 +1,6 @@
 @extends('layout.app')
 @section('_styles')
-
-<link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
 <style>
-    
     .select2-container .select2-selection--single {
         display: block;
         width: 100%;
@@ -61,14 +58,8 @@
 @endsection
 
 @section('_scripts')
-
-<script src="{{asset('plugins/select2/js/select2.full.min.js')}}"></script>
 <script>
     $(document).ready(function() {
-        $('.select2').select2({
-            placeholder: 'Select',
-            allowClear: true
-        });
     });
 </script>
 @endsection
