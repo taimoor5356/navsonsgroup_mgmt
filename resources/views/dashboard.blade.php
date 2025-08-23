@@ -70,6 +70,7 @@
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Expenses</span>
                             <h3 class="card-title text-nowrap mb-2">Rs {{!empty($expensesSummary) ? number_format($expensesSummary->total_expenses, 2) : 0}}</h3>
+                            <small>(Advance Salaries: {{number_format(\App\Models\Expense::where('expense_type_id', 2)->whereDate('created_at', request('date_range'))->sum('amount'), 2)}})</small><br>
                             <a href="{{route('admin.expenses.list')}}" class="btn btn-danger rounded btn-xs">View More</a>
                         </div>
                     </div>

@@ -149,6 +149,9 @@ class ServiceController extends Controller
             ->addColumn('luster', function ($row) {
                 return '<input type="checkbox" class="luster luster-service" data-service-id="'.$row->id.'" '.($row->luster == 1 ? 'checked' : '').'>';
             })
+            ->addColumn('polish', function ($row) {
+                return '<input type="checkbox" class="polish polish-service" data-service-id="'.$row->id.'" '.($row->polish == 1 ? 'checked' : '').'>';
+            })
             ->addColumn('vaccum', function ($row) {
                 return '<input type="checkbox" class="vaccum vaccum-service" data-service-id="'.$row->id.'" '.($row->vaccum == 1 ? 'checked' : '').'>';
             })
@@ -179,7 +182,7 @@ class ServiceController extends Controller
                     }
                 return $btns;
             })
-            ->rawColumns(['sr_no', 'payment_status', 'email', 'payment_mode', 'name', 'role', 'luster', 'vaccum', 'diesel', 'complaint', 'actions'])
+            ->rawColumns(['sr_no', 'payment_status', 'email', 'payment_mode', 'name', 'role', 'luster', 'polish', 'vaccum', 'diesel', 'complaint', 'actions'])
             ->setTotalRecords($totalRecords)
             ->setFilteredRecords($totalRecords) // For simplicity, same as totalRecords
             ->skipPaging()

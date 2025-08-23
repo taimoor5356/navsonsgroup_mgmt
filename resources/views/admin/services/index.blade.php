@@ -71,6 +71,7 @@
                             <th>Payment Mode</th>
                             <th>Phone</th>
                             <th>Luster</th>
+                            <th>Polish</th>
                             <th>Vaccum</th>
                             <th>Diesel</th>
                             <th>Complain</th>
@@ -159,6 +160,10 @@
                     {
                         name: 'luster',
                         data: 'luster'
+                    },
+                    {
+                        name: 'polish',
+                        data: 'polish'
                     },
                     {
                         name: 'vaccum',
