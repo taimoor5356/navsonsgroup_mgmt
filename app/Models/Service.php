@@ -15,6 +15,10 @@ class Service extends Model
         return $this->belongsTo(Vehicle::class, 'vehicle_id', 'id');
     }
 
+    public function user_vehicle() {
+        return $this->belongsTo(UserVehicle::class, 'user_vehicle_id', 'id');
+    }
+
     public function service_type() {
         return $this->belongsTo(ServiceType::class, 'service_type_id', 'id');
     }

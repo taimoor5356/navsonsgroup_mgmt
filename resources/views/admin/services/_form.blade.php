@@ -1,13 +1,19 @@
 @section('_styles')
     <style>
         #brandList {
-        border-radius: 0 0 .375rem .375rem; /* rounded bottom corners */
+            border-radius: 0 0 .375rem .375rem; /* rounded bottom corners */
         }
         #brandList .list-group-item {
             cursor: pointer;
         }
         #brandList .list-group-item:hover {
             background-color: #f1f1f1;
+        }
+        #vehicle-brand-name {
+            text-align: left !important;
+        }
+        .form-control {
+            text-align: left;
         }
     </style>
 @endsection
@@ -21,10 +27,12 @@
         $discountReason = '';
         $collectedAmount = 0;
         $paymentModeId = 0;
+        $vehicleBrandName = '';
         $vehicleName = '';
         $registrationNumber = '';
         if (isset($record)) {
             if (isset($record->vehicle)) {
+                $vehicleBrandName = $record->vehicle?->brand?->name;
                 $vehicleName = $record->vehicle?->name;
                 $registrationNumber = $record->vehicle?->registration_number;
                 $diesel = $record->diesel;
@@ -63,13 +71,51 @@
             </a>
         </div>
     </div>
-    <div class="mb-3 col-md-6 col-12">
+    <div class="mb-3 col-md-6 col-12 position-relative">
+        <label class="form-label" for="vehicle-brand-name">Vehicle Brand Name</label>
+        <div class="input-group input-group-merge">
+            <span id="vehicle-brand-name2" class="input-group-text"><i class="bx bx-car"></i></span>
+            <input type="text" name="vehicle_brand_name" 
+                value="{{ isset($record) ? $vehicleBrandName : '' }}" 
+                class="form-control" 
+                id="vehicle-brand-name" 
+                placeholder="Enter Vehicle Brand Name" 
+                autocomplete="off" style="text-align: left;">
+            <input type="text" id="vehicle-brand-id" name="vehicle_brand_id" value="">
+        </div>
+
+        <!-- Suggestions dropdown -->
+        <ul id="vehicle-brand-suggestions" 
+            class="list-group position-absolute w-100" 
+            style="z-index:1000; max-height:200px; overflow-y:auto; background-color: white; display: none;">
+        </ul>
+    </div>
+    <div class="mb-3 col-md-6 col-12 position-relative">
+        <label class="form-label" for="vehicle-name">Vehicle Model Name</label>
+        <div class="input-group input-group-merge">
+            <span id="vehicle-name2" class="input-group-text"><i class="bx bx-car"></i></span>
+            <input type="text" name="vehicle_name" 
+                value="{{ isset($record) ? $vehicleName : '' }}" 
+                class="form-control" 
+                id="vehicle-name" 
+                placeholder="Enter Vehicle Name" 
+                autocomplete="off" style="text-align: left;">
+            <input type="text" id="vehicle-id" name="vehicle_id" value="">
+        </div>
+
+        <!-- Suggestions dropdown -->
+        <ul id="vehicle-suggestions" 
+            class="list-group position-absolute w-100" 
+            style="z-index:1000; max-height:200px; overflow-y:auto; background-color: white; display: none;">
+        </ul>
+    </div>
+    <!-- <div class="mb-3 col-md-6 col-12">
         <label class="form-label" for="vehicle-name">Vehicle Name</label>
         <div class="input-group input-group-merge">
             <span id="vehicle-name2" class="input-group-text"><i class="bx bx-car"></i></span>
             <input type="text" name="vehicle_name" value="{{isset($record) ? $vehicleName : ''}}" class="form-control" id="vehicle-name" placeholder="Enter Vehicle Name" aria-label="John Doe" aria-describedby="vehicle-name2">
         </div>
-    </div>
+    </div> -->
     
     <div class="mb-3 col-md-6 col-12">
         <label class="form-label d-flex justify-content-between align-items-center" for="service_type">
@@ -224,63 +270,111 @@
             $(this).val($(this).val().replace(/ /g, "-"));
         });
 
+        $(document).on('keyup', '#vehicle-brand-name', function() {
+            let query = $(this).val();
 
-        $(function(){
-            let selectedBrand = null;
+            if (query.length >= 3) { // start searching after 3 chars
+                $.ajax({
+                    url: "{{ route('search_vehicle_brand_by_name') }}",
+                    type: "POST",
+                    data: { 
+                        _token: "{{ csrf_token() }}", 
+                        q: query 
+                    },
+                    success: function(response) {
+                        let suggestions = $('#vehicle-brand-suggestions');
+                        suggestions.empty();
 
-            // Brand Autocomplete
-            $('#brandInput').on('keyup', function(){
-                let query = $(this).val();
-                if(query.length > 0){
-                    $.getJSON("{{ route('brands') }}", function(brands){
-                        $('#brandList').empty();
-                        brands.filter(b => b.toLowerCase().includes(query.toLowerCase()))
-                            .forEach(b => {
-                                $('#brandList').append(
-                                    `<a href="#" class="list-group-item list-group-item-action brand-item">${b}</a>`
-                                );
+                        if (response.data.length > 0) {
+                            response.data.forEach(function(item) {
+                                suggestions.append(`
+                                    <li class="list-group-item brand-suggestion-item" 
+                                        style="cursor:pointer;" 
+                                        data-vehicle-brand-id="${item.id}">
+                                        ${item.name}
+                                    </li>
+                                `);
                             });
-                    });
-                } else {
-                    $('#brandList').empty();
-                }
-            });
+                            suggestions.show();
+                        } else {
+                            suggestions.hide();
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error("API error:", xhr.responseText);
+                    }
+                });
+            } else {
+                $('#vehicle-brand-suggestions').hide();
+            }
+        });
+        // On click: fill input with selected name
+        $(document).on('click', '.brand-suggestion-item', function() {
+            $('#vehicle-brand-name').val($(this).text().trim());
+            $('#vehicle-brand-id').val($(this).attr('data-vehicle-brand-id').trim());
+            $('#vehicle-brand-suggestions').hide();
+            
+            $('#vehicle-name').val();
+            $('#vehicle-id').val();
+        });
+        // Hide suggestions when clicking outside
+        $(document).click(function(e) {
+            if (!$(e.target).closest('#vehicle-brand-name, #vehicle-brand-suggestions').length) {
+                $('#vehicle-brand-suggestions').hide();
+            }
+        });
 
-            // Select Brand
-            $(document).on('click', '.brand-item', function(e){
-                e.preventDefault();
-                selectedBrand = $(this).text();
-                $('#brandInput').val(selectedBrand);
-                $('#brandList').empty();
+        
+        $(document).on('keyup', '#vehicle-name', function() {
+            let query = $(this).val();
+            var vehicleBrandId = $('#vehicle-brand-id').val();
+            if (query.length >= 3) { // start searching after 3 chars
+                $.ajax({
+                    url: "{{ route('search_vehicle_by_name') }}",
+                    type: "POST",
+                    data: { 
+                        _token: "{{ csrf_token() }}", 
+                        q: query,
+                        vehicle_brand_id: vehicleBrandId 
+                    },
+                    success: function(response) {
+                        let suggestions = $('#vehicle-suggestions');
+                        suggestions.empty();
 
-                // Enable model input
-                $('#modelInput').prop('disabled', false).val('');
-            });
-
-            // Model Autocomplete (after brand selected)
-            $('#modelInput').on('keyup', function(){
-                let query = $(this).val();
-                if(selectedBrand && query.length > 0){
-                    $.getJSON("{{ route('models') }}", { brand: selectedBrand }, function(models){
-                        $('#modelList').empty();
-                        models.filter(m => m.toLowerCase().includes(query.toLowerCase()))
-                            .forEach(m => {
-                                $('#modelList').append(
-                                    `<a href="#" class="list-group-item list-group-item-action model-item">${m}</a>`
-                                );
+                        if (response.data.length > 0) {
+                            response.data.forEach(function(item) {
+                                suggestions.append(`
+                                    <li class="list-group-item suggestion-item" 
+                                        style="cursor:pointer;" 
+                                        data-vehicle-id="${item.id}">
+                                        ${item.name}
+                                    </li>
+                                `);
                             });
-                    });
-                } else {
-                    $('#modelList').empty();
-                }
-            });
-
-            // Select Model
-            $(document).on('click', '.model-item', function(e){
-                e.preventDefault();
-                $('#modelInput').val($(this).text());
-                $('#modelList').empty();
-            });
+                            suggestions.show();
+                        } else {
+                            suggestions.hide();
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error("API error:", xhr.responseText);
+                    }
+                });
+            } else {
+                $('#vehicle-suggestions').hide();
+            }
+        });
+        // On click: fill input with selected name
+        $(document).on('click', '.suggestion-item', function() {
+            $('#vehicle-name').val($(this).text().trim());
+            $('#vehicle-id').val($(this).attr('data-vehicle-id').trim());
+            $('#vehicle-suggestions').hide();
+        });
+        // Hide suggestions when clicking outside
+        $(document).click(function(e) {
+            if (!$(e.target).closest('#vehicle-name, #vehicle-suggestions').length) {
+                $('#vehicle-suggestions').hide();
+            }
         });
 
    }); 

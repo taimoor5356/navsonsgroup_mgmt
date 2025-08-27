@@ -39,6 +39,8 @@ Route::post('/register', [AuthController::class, 'postRegister'])->name('post_re
 Route::get('/logout', [AuthController::class, 'logout'])->name('postlogout');
 
 Route::post('search-vehicle', [VehicleController::class, 'searchVehicleByNumber'])->name('search_vehicle_by_number');
+Route::post('search-vehicle-by-name', [VehicleController::class, 'searchVehicleByName'])->name('search_vehicle_by_name');
+Route::post('search-vehicle-by-brand-name', [VehicleController::class, 'searchVehicleByBrandName'])->name('search_vehicle_brand_by_name');
 
 Route::get('/brands', [VehicleController::class, 'brands'])->name('brands');
 Route::get('/models', [VehicleController::class, 'models'])->name('models');

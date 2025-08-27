@@ -13,16 +13,19 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->integer('vehicle_id')->nullable();
+            $table->integer('user_vehicle_id')->nullable();
             $table->integer('service_type_id')->nullable();
             $table->tinyInteger('diesel')->default(0);
             $table->tinyInteger('polish')->default(0);
+            $table->tinyInteger('luster')->default(0);
+            $table->tinyInteger('vaccum')->default(0);
             $table->integer('charges')->default(0);
             $table->integer('discount')->default(0);
             $table->string('discount_reason')->nullable();
             $table->integer('collected_amount')->default(0);
             $table->tinyInteger('payment_mode_id')->nullable();
             $table->tinyInteger('payment_status')->default(0);
+            $table->tinyInteger('complain')->default(0);
             $table->string('deleted_at')->nullable();
             $table->timestamps();
         });

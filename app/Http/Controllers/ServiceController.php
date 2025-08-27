@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Service;
 use App\Models\Vehicle;
 use App\Models\ErrorLog;
+use App\Models\UserVehicle;
+use App\Models\VehicleBrand;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -314,7 +316,7 @@ class ServiceController extends Controller
     {
         //
         $data['header_title'] = 'Edit Details';
-        $data['record'] = Service::with('vehicle.user')->where('id', $id)->first();
+        $data['record'] = Service::with('vehicle.brand', 'user_vehicle')->where('id', $id)->first();
         return view('admin.services.edit', $data);
     }
 
@@ -325,7 +327,7 @@ class ServiceController extends Controller
     {
         //
         try {
-            $service = Service::with('vehicle.user')->where('id', $id)->first();
+            $service = Service::where('id', $id)->first();
             if (isset($service)) {
                 $service->service_type_id = $request->service_type;
                 $service->diesel = $request->filled('diesel') ? 1 : 0;
@@ -338,18 +340,44 @@ class ServiceController extends Controller
                 $service->updated_at = !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::parse($service->updated_at)->format('Y-m-d H:i:s');
                 $service->save();
             }
-            $vehicle = Vehicle::where('id', $service->vehicle_id)->first();
-            if (isset($vehicle)) {
-                $vehicle->name = $request->vehicle_name;
-                $vehicle->registration_number = $request->vehicle_registration_number;
-                $vehicle->save();
-            }
-            $user = User::where('id', $vehicle->user_id)->first();
+            $user = User::where('phone', $request->customer_phone)->first();
             if (isset($user)) {
                 $user->name = $request->customer_name;
                 $user->phone = $request->customer_phone;
                 $user->address = $request->customer_address;
                 $user->save();
+            } else {
+                $user = User::create([
+                    'name' => !empty($request->customer_name) ? strtolower($request->customer_name) : 'new_user',
+                    'email' => !empty($request->customer_email) ? $request->customer_email : 'new_user_' . $request->vehicle_registration_number . '@test.com',
+                    'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
+                    'address' => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
+                    'user_type' => 3,
+                    'is_active' => 1,
+                    'password' => Hash::make('12345678'),
+                ]);
+                $user->assignRole('customer');
+            }
+            $vehicleBrand = VehicleBrand::where('id', $request->vehicle_brand_id)->first();
+            if (!isset($vehicleBrand)) {
+                $vehicleBrand = new VehicleBrand();
+                $vehicleBrand->name = $request->vehicle_brand_name;
+                $vehicleBrand->save();
+            }
+            $vehicle = Vehicle::where('id', $request->vehicle_id)->where('vehicle_brand_id', $vehicleBrand->id)->first();
+            if (!isset($vehicle)) {
+                $vehicle = new Vehicle();
+                $vehicle->name = $request->vehicle_name;
+                $vehicle->vehicle_brand_id = $vehicleBrand->id;
+                $vehicle->save();
+            }
+            $userVehicle = UserVehicle::where('vehicle_id', $vehicle->vehicle_id)->where('registration_number', $request->vehicle_registration_number)->first();
+            if (!isset($userVehicle)) {
+                UserVehicle::create([
+                    'user_id' => $user->id,
+                    'vehicle_id' => $vehicle->id,
+                    'registration_number' => $request->vehicle_registration_number,
+                ]);
             }
             return redirect()->back()->with('success', 'Updated successfully');
             // return redirect()->route('admin.services.list')->with('success', 'Updated successfully');

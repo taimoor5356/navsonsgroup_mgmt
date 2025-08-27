@@ -16,6 +16,10 @@ class Vehicle extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
+    public function brand() {
+        return $this->belongsTo(VehicleBrand::class, 'vehicle_id', 'id');
+    }
+
     public function services() {
         return $this->hasMany(Service::class, 'vehicle_id', 'id');
     }
