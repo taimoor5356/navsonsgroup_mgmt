@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone')->nullable();
             $table->longText('address')->nullable();
+            $table->integer('user_address_id')->nullable();
             $table->integer('user_type')->nullable();
             $table->tinyInteger('is_active')->nullable();
             $table->timestamp('email_verified_at')->nullable();

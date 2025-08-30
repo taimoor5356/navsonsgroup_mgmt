@@ -81,7 +81,7 @@
                 id="vehicle-brand-name" 
                 placeholder="Enter Vehicle Brand Name" 
                 autocomplete="off" style="text-align: left;">
-            <input type="text" id="vehicle-brand-id" name="vehicle_brand_id" value="">
+            <input type="hidden" id="vehicle-brand-id" name="vehicle_brand_id" value="">
         </div>
 
         <!-- Suggestions dropdown -->
@@ -100,7 +100,7 @@
                 id="vehicle-name" 
                 placeholder="Enter Vehicle Name" 
                 autocomplete="off" style="text-align: left;">
-            <input type="text" id="vehicle-id" name="vehicle_id" value="">
+            <input type="hidden" id="vehicle-id" name="vehicle_id" value="">
         </div>
 
         <!-- Suggestions dropdown -->
@@ -205,12 +205,32 @@
                     <input type="text" name="customer_phone" value="{{isset($record) ? $record->vehicle?->user?->phone : ''}}" id="customer-phone" class="form-control" placeholder="Enter Customer Phone" aria-label="+923001234567" aria-describedby="customer-phone2">
                 </div>
             </div>
-            <div class="mb-3 col-md-6 col-12">
+            <!-- <div class="mb-3 col-md-6 col-12">
                 <label class="form-label" for="customer-address">Customer Address</label>
                 <div class="input-group input-group-merge">
                     <span class="input-group-text"><i class="bx bx-trip"></i></span>
-                    <input type="text" name="customer_address" value="{{isset($record) ? $record->vehicle?->user?->address : ''}}" id="customer-address" class="form-control" placeholder="Enter Customer Address" aria-label="ghouri town" aria-describedby="customer-address2">
+                    <input type="text" name="customer_address" value="{{isset($record) ? $record->vehicle?->user?->address : ''}}" class="form-control" placeholder="Enter Customer Address" aria-label="ghouri town" aria-describedby="customer-address2">
                 </div>
+            </div> -->
+            
+            <div class="mb-3 col-md-6 col-12 position-relative">
+                <label class="form-label" for="customer-address">Customer Address</label>
+                <div class="input-group input-group-merge">
+                    <span id="customer-address2" class="input-group-text"><i class="bx bx-car"></i></span>
+                    <input type="text" name="customer_address" 
+                        value="" 
+                        class="form-control" 
+                        id="customer-address" 
+                        placeholder="Enter Customer Address" 
+                        autocomplete="off" style="text-align: left;">
+                    <input type="hidden" id="customer-address-id" name="customer_address_id" value="">
+                </div>
+
+                <!-- Suggestions dropdown -->
+                <ul id="customer-address-suggestions" 
+                    class="list-group position-absolute w-100" 
+                    style="z-index:1000; max-height:200px; overflow-y:auto; background-color: white; display: none;">
+                </ul>
             </div>
         </div>
     </div>
@@ -248,10 +268,18 @@
                     },
                     success: function (response) {
                         if ((response) && (response.status == true)) {
-                            $('#vehicle-name').val(response.data.name);
+                            $('#vehicle-brand-name').val(response.data.vehicle.brand.name);
+                            $('#vehicle-name').val(response.data.vehicle.name);
+                            
+                            $('#vehicle-brand-id').val(response.data.vehicle.brand.id);
+                            $('#vehicle-id').val(response.data.vehicle.id);
+                            
+                            $('#customer-address').val(response.data.user.user_address.name);
+                            $('#customer-address-id').val(response.data.user.user_address.id);
+
                             $('#customer-name').val(response.data.user.name);
                             $('#customer-phone').val(response.data.user.phone);
-                            $('#customer-address').val(response.data.user.address);
+                            // $('#customer-address').val(response.data.user.address);
                         }
                         $('.search-icon').removeClass('d-none');
                         $('.loader-icon').addClass('d-none');
@@ -323,6 +351,61 @@
                 $('#vehicle-brand-suggestions').hide();
             }
         });
+        
+        // Address starts
+        
+        $(document).on('keyup', '#customer-address', function() {
+            let query = $(this).val();
+            var customerAddress = $('#customer-address-id').val();
+            if (query.length >= 3) { // start searching after 3 chars
+                $.ajax({
+                    url: "{{ route('search_customer_address_by_name') }}",
+                    type: "POST",
+                    data: { 
+                        _token: "{{ csrf_token() }}", 
+                        q: query
+                    },
+                    success: function(response) {
+                        let suggestions = $('#customer-address-suggestions');
+                        suggestions.empty();
+
+                        if (response.data.length > 0) {
+                            response.data.forEach(function(item) {
+                                suggestions.append(`
+                                    <li class="list-group-item customer-address-suggestion-item" 
+                                        style="cursor:pointer;" 
+                                        data-customer-address-id="${item.id}">
+                                        ${item.name}
+                                    </li>
+                                `);
+                            });
+                            suggestions.show();
+                        } else {
+                            suggestions.hide();
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error("API error:", xhr.responseText);
+                    }
+                });
+            } else {
+                $('#customer-address-suggestions').hide();
+            }
+        });
+        // On click: fill input with selected name
+        $(document).on('click', '.customer-address-suggestion-item', function() {
+            $('#customer-address').val($(this).text().trim());
+            $('#customer-address-id').val($(this).attr('data-customer-address-id').trim());
+            $('#customer-address-suggestions').hide();
+        });
+        // Hide suggestions when clicking outside
+        $(document).click(function(e) {
+            if (!$(e.target).closest('#customer-address, #customer-address-suggestions').length) {
+                $('#customer-address-suggestions').hide();
+            }
+        });
+
+        // Address ends
 
         
         $(document).on('keyup', '#vehicle-name', function() {

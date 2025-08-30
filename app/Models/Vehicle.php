@@ -17,7 +17,7 @@ class Vehicle extends Model
     }
 
     public function brand() {
-        return $this->belongsTo(VehicleBrand::class, 'vehicle_id', 'id');
+        return $this->belongsTo(VehicleBrand::class, 'vehicle_brand_id', 'id');
     }
 
     public function services() {

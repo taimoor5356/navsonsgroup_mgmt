@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\UserAddress;
-use App\Models\UserVehicle;
 use Illuminate\Http\Request;
 
-class UserVehicleController extends Controller
+class UserAddressController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -35,7 +34,7 @@ class UserVehicleController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(UserVehicle $userVehicle)
+    public function show(UserAddress $userAddress)
     {
         //
     }
@@ -43,7 +42,7 @@ class UserVehicleController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(UserVehicle $userVehicle)
+    public function edit(UserAddress $userAddress)
     {
         //
     }
@@ -51,7 +50,7 @@ class UserVehicleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, UserVehicle $userVehicle)
+    public function update(Request $request, UserAddress $userAddress)
     {
         //
     }
@@ -59,25 +58,8 @@ class UserVehicleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(UserVehicle $userVehicle)
+    public function destroy(UserAddress $userAddress)
     {
         //
-    }
-
-    public function searchCustomerAddressByName(Request $request)
-    {
-        $userAddresses = UserAddress::where('name', 'LIKE', '%'.$request->q.'%')->get();
-
-        if (!empty($userAddresses)) {
-            return response()->json([
-                'status' => true,
-                'data' => $userAddresses,
-            ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'data' => [],
-            ], 404);
-        }
     }
 }

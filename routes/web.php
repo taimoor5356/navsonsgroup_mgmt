@@ -13,6 +13,7 @@ use App\Http\Controllers\PreviousPaymentController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserGroupController;
+use App\Http\Controllers\UserVehicleController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,8 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('postlogout');
 Route::post('search-vehicle', [VehicleController::class, 'searchVehicleByNumber'])->name('search_vehicle_by_number');
 Route::post('search-vehicle-by-name', [VehicleController::class, 'searchVehicleByName'])->name('search_vehicle_by_name');
 Route::post('search-vehicle-by-brand-name', [VehicleController::class, 'searchVehicleByBrandName'])->name('search_vehicle_brand_by_name');
+
+Route::post('search-customer-address-by-name', [UserVehicleController::class, 'searchCustomerAddressByName'])->name('search_customer_address_by_name');
 
 Route::get('/brands', [VehicleController::class, 'brands'])->name('brands');
 Route::get('/models', [VehicleController::class, 'models'])->name('models');

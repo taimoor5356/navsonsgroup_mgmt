@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TempVehicle;
+use App\Models\UserVehicle;
 use App\Models\Vehicle;
 use App\Models\VehicleBrand;
 use Illuminate\Http\Request;
@@ -98,7 +98,7 @@ class VehicleController extends Controller
     public function searchVehicleByNumber(Request $request)
     {
         if(!empty($request->registration_number)){
-            $vehicleExists = Vehicle::with('user')->where('registration_number', strtolower($request->registration_number))->first();
+            $vehicleExists = UserVehicle::with('user.user_address', 'vehicle.brand')->where('registration_number', strtolower($request->registration_number))->first();
             if (isset($vehicleExists)) {
                 $data = [
                     'status' => true,
@@ -118,7 +118,7 @@ class VehicleController extends Controller
     {
         if(!empty($request->q)){
             $q = $request->get('q');
-                $vehicles = TempVehicle::where('vehicle_brand_id', $request->vehicle_brand_id)->where('name', 'LIKE', "%{$q}%")
+                $vehicles = Vehicle::where('vehicle_brand_id', $request->vehicle_brand_id)->where('name', 'LIKE', "%{$q}%")
                                 ->limit(10)
                                 ->get(['id','name']);
             if (!empty($vehicles)) {
