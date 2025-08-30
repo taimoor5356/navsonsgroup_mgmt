@@ -76,7 +76,7 @@
                                 $end = now()->endOfDay();
                                 $daysDiff = $start->diffInDays($end) + 1;
                             }
-                            $totalSales = $query->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))->sum('total_amount');
+                            $totalSales = $query->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))->sum('collected_amount');
                             $avgPerDay = $daysDiff > 0 ? number_format($totalSales / $daysDiff, 2) : 0;
                             @endphp
                             <small>(Avg/Day: {{$avgPerDay}})</small>
