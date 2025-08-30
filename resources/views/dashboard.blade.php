@@ -61,6 +61,21 @@
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-success"></i> Total Sale</span>
                             <h3 class="card-title text-nowrap mb-2">Rs {{!empty($salesSummary) ? number_format($salesSummary->total_sales, 2) : 0}}</h3>
+                            @php  
+                                $dateRange = request('date_range');
+                                $query = \App\Models\Service::query();
+
+                                if ($dateRange) {
+                                    [$start, $end] = explode(' - ', $dateRange);
+                                    $start = \Carbon\Carbon::parse($start)->startOfDay();
+                                    $end   = \Carbon\Carbon::parse($end)->endOfDay();
+                                }
+
+                                $totalServices = $query->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))->count();
+                                $daysCount = $dateRange ? \Carbon\Carbon::parse($start)->diffInDays(\Carbon\Carbon::parse($end)) + 1 : 1;
+                                $avgPerDay = $daysCount > 0 ? $totalServices / $daysCount : 0;
+                            @endphp
+                            <small>(Avg/Day: {{$avgPerDay}})</small>
                             <a href="{{route('admin.services.list')}}" class="btn btn-success rounded btn-xs">View More</a>
                         </div>
                     </div>
