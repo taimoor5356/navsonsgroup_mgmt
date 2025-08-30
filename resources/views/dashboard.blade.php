@@ -80,6 +80,7 @@
                             $avgPerDay = $daysDiff > 0 ? number_format($totalSales / $daysDiff, 2) : 0;
                             @endphp
                             <small>(Avg/Day: {{$avgPerDay}})</small>
+                            <br>
                             <a href="{{route('admin.services.list')}}" class="btn btn-success rounded btn-xs">View More</a>
                         </div>
                     </div>
