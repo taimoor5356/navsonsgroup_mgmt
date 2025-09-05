@@ -60,7 +60,27 @@
                     <div class="card">
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-success"></i> Total Sale</span>
-                            <h3 class="card-title text-nowrap mb-2 toggle-amount" data-value="Rs {{!empty($salesSummary) ? number_format($salesSummary->total_sales, 2) : 0}}">Rs {{!empty($salesSummary) ? number_format($salesSummary->total_sales, 2) : 0}}</h3>
+                            <h3 class="card-title text-nowrap mb-2">Rs {{!empty($salesSummary) ? number_format($salesSummary->total_sales, 2) : 0}}</h3>
+                            @php
+                            // Calculate average sales per day
+                            $dateRange = request('date_range');
+                            $query = \App\Models\Service::query();
+                            if ($dateRange) {
+                                [$start, $end] = explode(' - ', $dateRange);
+                                $start = \Carbon\Carbon::parse($start)->startOfDay();
+                                $end   = \Carbon\Carbon::parse($end)->endOfDay();
+                                $daysDiff = $start->diffInDays($end) + 1; // +1 to include both start and end dates
+                            } else {
+                                $firstService = \App\Models\Service::orderBy('created_at')->first();
+                                $start = $firstService ? \Carbon\Carbon::parse($firstService->created_at)->startOfDay() : now()->startOfDay();
+                                $end = now()->endOfDay();
+                                $daysDiff = $start->diffInDays($end) + 1;
+                            }
+                            $totalSales = $query->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))->sum('collected_amount');
+                            $avgPerDay = $daysDiff > 0 ? number_format($totalSales / $daysDiff, 2) : 0;
+                            @endphp
+                            <small>(Avg/Day: {{$avgPerDay}})</small>
+                            <br>
                             <a href="{{route('admin.services.list')}}" class="btn btn-success rounded btn-xs">View More</a>
                         </div>
                     </div>
