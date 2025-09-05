@@ -58,30 +58,44 @@
             <div class="row">
                 <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
                     <div class="card">
-                        <div class="card-body">
-                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-success"></i> Total Sale</span>
-                            <h3 class="card-title text-nowrap mb-2">Rs {{!empty($salesSummary) ? number_format($salesSummary->total_sales, 2) : 0}}</h3>
-                            @php
-                            // Calculate average sales per day
-                            $dateRange = request('date_range');
-                            $query = \App\Models\Service::query();
-                            if ($dateRange) {
-                                [$start, $end] = explode(' - ', $dateRange);
-                                $start = \Carbon\Carbon::parse($start)->startOfDay();
-                                $end   = \Carbon\Carbon::parse($end)->endOfDay();
-                                $daysDiff = $start->diffInDays($end) + 1; // +1 to include both start and end dates
-                            } else {
-                                $firstService = \App\Models\Service::orderBy('created_at')->first();
-                                $start = $firstService ? \Carbon\Carbon::parse($firstService->created_at)->startOfDay() : now()->startOfDay();
-                                $end = now()->endOfDay();
-                                $daysDiff = $start->diffInDays($end) + 1;
-                            }
-                            $totalSales = $query->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))->sum('collected_amount');
-                            $avgPerDay = $daysDiff > 0 ? number_format($totalSales / $daysDiff, 2) : 0;
-                            @endphp
-                            <small>(Avg/Day: {{$avgPerDay}})</small>
-                            <br>
-                            <a href="{{route('admin.services.list')}}" class="btn btn-success rounded btn-xs">View More</a>
+                        <div class="card-body d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="d-block mb-1">
+                                    <i class="menu-icon tf-icons bx bx-money text-success"></i> Total Sale
+                                </span>
+                                <h3 class="card-title text-nowrap mb-2 toggle-amount" data-value="Rs {{ !empty($salesSummary) ? number_format($salesSummary->total_sales, 2) : 0 }}">
+                                    Rs {{ !empty($salesSummary) ? number_format($salesSummary->total_sales, 2) : 0 }}
+                                </h3>
+                                @php
+                                    // Calculate average sales per day
+                                    $dateRange = request('date_range');
+                                    $query = \App\Models\Service::query();
+                                    if ($dateRange) {
+                                        [$start, $end] = explode(' - ', $dateRange);
+                                        $start = \Carbon\Carbon::parse($start)->startOfDay();
+                                        $end   = \Carbon\Carbon::parse($end)->endOfDay();
+                                        $daysDiff = $start->diffInDays($end) + 1;
+                                    } else {
+                                        $firstService = \App\Models\Service::orderBy('created_at')->first();
+                                        $start = $firstService ? \Carbon\Carbon::parse($firstService->created_at)->startOfDay() : now()->startOfDay();
+                                        $end = now()->endOfDay();
+                                        $daysDiff = $start->diffInDays($end) + 1;
+                                    }
+                                    $totalSales = $query->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))->sum('collected_amount');
+                                    $avgPerDay = $daysDiff > 0 ? number_format($totalSales / $daysDiff, 2) : 0;
+                                @endphp
+                                <small>(Avg/Day: {{ $avgPerDay }})</small>
+                                <br>
+                                <a href="{{ route('admin.services.list') }}" class="btn btn-success rounded btn-xs">View More</a>
+                            </div>
+
+                            <!-- Scrollable text at right side -->
+                            <div style="padding: 5px; max-height:120px; overflow-y:auto; font-size:9px; margin-left:15px; white-space:nowrap; scrollbar-width: thin; scrollbar-color: #ccc transparent;">
+                                @foreach ($dayWiseSale as $day)
+                                    <div>{{ \Carbon\Carbon::parse($day->sale_date)->format('d, M') }}) Rs {{ number_format($day->total_sales) }}</div>
+                                @endforeach
+                            </div>
+
                         </div>
                     </div>
                 </div>

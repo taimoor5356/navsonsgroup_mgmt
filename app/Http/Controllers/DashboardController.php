@@ -34,6 +34,7 @@ class DashboardController extends Controller
             $data['totalNoOfCustomers'] = $this->totalNoOfCustomers($start, $end);
             $data['salesSummary']       = $this->salesSummary($start, $end);
             $data['expensesSummary']    = $this->expensesSummary($start, $end);
+            $data['dayWiseSale']    = $this->dayWiseSale($start, $end);
 
         } else {
             // default: today only
@@ -44,6 +45,7 @@ class DashboardController extends Controller
             $data['totalNoOfCustomers'] = $this->totalNoOfCustomers($startDay, $currentDay);
             $data['salesSummary']       = $this->salesSummary($startDay, $currentDay);
             $data['expensesSummary']    = $this->expensesSummary($startDay, $currentDay);
+            $data['dayWiseSale']    = $this->dayWiseSale($startDay, $currentDay);
         }
 
         $authUser = Auth::user();
@@ -78,6 +80,23 @@ class DashboardController extends Controller
         $query = User::customer()->active();
         return $query->count();
     }
+
+    // Daily sale
+public function dayWiseSale()
+{
+    $startDate = now()->startOfMonth()->format('Y-m-d 00:00:00');
+    $endDate   = now()->endOfDay()->format('Y-m-d H:i:s');
+
+    return Service::selectRaw("
+                DATE(created_at) as sale_date,
+                COALESCE(SUM(collected_amount), 0) as total_sales
+            ")
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('sale_date')
+            ->orderBy('sale_date', 'desc')
+            ->get();
+}
+
 
     // Sales / Payments / Discounts
     public function salesSummary($startDate, $endDate = null)
