@@ -222,9 +222,11 @@ class ServiceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'vehicle_registration_number' => 'required|string',
-            'service_type' => 'required|integer',
-            'charges' => 'required|integer',
+            'vehicle_registration_number' => 'required',
+            'vehicle_brand_id' => 'required',
+            'vehicle_id' => 'required',
+            'service_type' => 'required',
+            'charges' => 'required',
             'payment_mode_id' => 'required'
         ]);
 
@@ -232,13 +234,13 @@ class ServiceController extends Controller
 
         try {
             $vehicleRegNo = $request->vehicle_registration_number;
-            $vehicle = Vehicle::where('registration_number', $vehicleRegNo)->first();
+            $userVehicle = UserVehicle::where('registration_number', $vehicleRegNo)->first();
             $user = null;
-            if ($vehicle) {
+            if ($userVehicle) {
                 // Vehicle exists
                 // Vehicle has no user assigned, try to find user by email
-                $user = User::where('id', $vehicle->user_id)->first();
-                if (!$vehicle->user_id) {
+                $user = User::where('id', $userVehicle->user_id)->first();
+                if (!$userVehicle->user_id) {
                     if (!$user) {
                         $user = User::create([
                             'name' => !empty($request->customer_name) ? strtolower($request->customer_name) : 'new_user',
@@ -250,7 +252,7 @@ class ServiceController extends Controller
                             'password' => Hash::make('12345678'),
                         ]);
                     }
-                    $vehicle->update(['user_id' => $user->id]);
+                    $userVehicle->update(['user_id' => $user->id]);
                 }
                 $user->assignRole('customer');
             } else {

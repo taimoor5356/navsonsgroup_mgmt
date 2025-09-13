@@ -357,7 +357,7 @@
         $(document).on('keyup', '#customer-address', function() {
             let query = $(this).val();
             var customerAddress = $('#customer-address-id').val();
-            if (query.length >= 3) { // start searching after 3 chars
+            if (query.length >= 2) { // start searching after 3 chars
                 $.ajax({
                     url: "{{ route('search_customer_address_by_name') }}",
                     type: "POST",
