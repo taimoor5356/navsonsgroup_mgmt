@@ -45,7 +45,7 @@
                     <div class="card">
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-success"></i> Total Salary</span>
-                            <h3 class="card-title text-nowrap mb-2">Rs 25,000</h3>
+                            <h3 class="card-title text-nowrap mb-2">Rs 20,000</h3>
                         </div>
                     </div>
                 </div>
@@ -69,7 +69,7 @@
                     <div class="card">
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-warning"></i> Salary Remaining</span>
-                            <h3 class="card-title text-nowrap mb-2">Rs {{number_format((25000 - $record->expenses->sum('amount') - $record->fines->sum('amount')), 2)}}</h3>
+                            <h3 class="card-title text-nowrap mb-2">Rs {{number_format((20000 - $record->expenses->sum('amount') - $record->fines->sum('amount')), 2)}}</h3>
                         </div>
                     </div>
                 </div>
