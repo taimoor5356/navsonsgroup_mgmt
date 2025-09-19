@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Service;
 use App\Models\Vehicle;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class VehicleController extends Controller
@@ -98,6 +100,19 @@ class VehicleController extends Controller
         if(!empty($request->registration_number)){
             $vehicleExists = Vehicle::with('user')->where('registration_number', strtolower($request->registration_number))->first();
             if (isset($vehicleExists)) {
+                $exists = Service::where('vehicle_id', $vehicleExists->id)
+                    ->where('created_at', '>=', Carbon::now()->subDay())
+                    ->exists();
+
+                if ($exists) {
+                    // Vehicle already had this service type in the last 24 hours
+                    return response()->json([
+                        'status' => false,
+                        'data' => [],
+                        'msg' => 'already_serviced',
+                        'message' => 'This car got serviced in last 24hrs, Please re-check the entries'
+                    ]);
+                }
                 $data = [
                     'status' => true,
                     'data' => $vehicleExists

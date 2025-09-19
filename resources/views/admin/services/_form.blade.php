@@ -207,6 +207,9 @@
                             $('#customer-phone').val(response.data.user.phone);
                             $('#customer-address').val(response.data.user.address);
                         }
+                        if ((response.status == false) && (response.msg == 'already_serviced')) {
+                            alert(response.message);
+                        }
                         $('.search-icon').removeClass('d-none');
                         $('.loader-icon').addClass('d-none');
 
