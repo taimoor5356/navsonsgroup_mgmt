@@ -116,18 +116,28 @@
                             @endphp
 
                             <small>
-                                (Salaries: 
+                                (Carwash Expenses: 
                                 {{ number_format(
-                                    \App\Models\Expense::where('expense_type_id', 2)
+                                    \App\Models\Expense::whereNotIn('expense_type_id', [1, 2])
                                         ->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))
                                         ->sum('amount'), 2)
                                 }})
                             </small><br>
 
                             <small>
-                                (Carwash Expenses: 
+                                (Food Expenses: 
                                 {{ number_format(
-                                    \App\Models\Expense::where('expense_type_id', '!=', 2)
+                                    \App\Models\Expense::where('expense_type_id', 1)
+                                        ->where('user_id', null)
+                                        ->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+                                        ->sum('amount'), 2)
+                                }})
+                            </small><br>
+
+                            <small>
+                                (Salaries: 
+                                {{ number_format(
+                                    \App\Models\Expense::where('expense_type_id', 2)
                                         ->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))
                                         ->sum('amount'), 2)
                                 }})
@@ -140,7 +150,7 @@
                     <div class="card">
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-warning"></i> Total Payment Received</span>
-                            <h3 class="card-title text-nowrap mb-2 toggle-amount" data-value="Rs {{!empty($expensesSummary) ? number_format(($salesSummary->total_sales - $expensesSummary->total_expenses), 2) : 0}}">Rs {{!empty($expensesSummary) ? number_format(($salesSummary->total_sales - $expensesSummary->total_expenses), 2) : 0}}</h3>
+                            <h3 class="card-title text-nowrap mb-2 toggle-amount" data-value="Rs {{!empty($expensesSummary) ? number_format(($salesSummary->total_sales - $salesSummary->total_overtime_payment - $expensesSummary->total_expenses), 2) : 0}}">Rs {{!empty($expensesSummary) ? number_format(($salesSummary->total_sales - $salesSummary->total_overtime_payment - $expensesSummary->total_expenses), 2) : 0}}</h3>
                         </div>
                     </div>
                 </div>
@@ -175,6 +185,15 @@
                         <div class="card-body">
                             <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Discounts</span>
                             <h3 class="card-title text-nowrap mb-2 toggle-amount" data-value="Rs {{!empty($salesSummary) ? number_format($salesSummary->total_discounts, 2) : 0}}">Rs {{!empty($salesSummary) ? number_format($salesSummary->total_discounts, 2) : 0}}</h3>
+                            <a href="{{route('admin.services.list')}}" class="btn btn-warning rounded btn-xs">View More</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Overtime</span>
+                            <h3 class="card-title text-nowrap mb-2 toggle-amount" data-value="Rs {{!empty($salesSummary) ? number_format($salesSummary->total_overtime_payment, 2) : 0}}">Rs {{!empty($salesSummary) ? number_format($salesSummary->total_overtime_payment, 2) : 0}}</h3>
                             <a href="{{route('admin.services.list')}}" class="btn btn-warning rounded btn-xs">View More</a>
                         </div>
                     </div>
@@ -238,25 +257,29 @@
                                         <th>Services</th>
                                     </thead>
                                     <tbody>
-                                        @php  
+                                        @php
                                             $users = \App\Models\User::where('user_type', 3)
-                                            ->with(['vehicles.services']) // load vehicles and their services
-                                            ->get()
-                                            ->map(function ($user) {
-                                                // count total services across all vehicles
-                                                $user->total_services = $user->vehicles->sum(fn($v) => $v->services->count());
-                                                return $user;
-                                            })
-                                            ->sortByDesc('total_services') // sort collection by total services
-                                            ->take(10); // get top 10
+                                                ->whereHas('user_vehicles', function ($q) {
+                                                    $q->where('service_count', '>', 0);
+                                                })
+                                                ->with(['user_vehicles' => function ($q) {
+                                                    $q->where('service_count', '>', 0); // only load vehicles with services
+                                                }])
+                                                ->withSum(['user_vehicles as total_services' => function ($q) {
+                                                    $q->where('service_count', '>', 0);
+                                                }], 'service_count')
+                                                ->orderByDesc('total_services')
+                                                ->take(10)
+                                                ->get();
                                         @endphp
+
                                         @foreach($users as $user)
                                             <tr>
                                                 <td>{{ $user->name }}</td>
                                                 <td>
-                                                    @if($user->vehicles->isNotEmpty())
-                                                        {{ $user->vehicles->first()->registration_number }}
-                                                        ({{ $user->vehicles->first()->name }})
+                                                    @if($user->user_vehicles->isNotEmpty())
+                                                        {{ $user->user_vehicles->first()->registration_number }}
+                                                        ({{ $user->user_vehicles->first()->vehicle?->name }})
                                                     @else
                                                         -
                                                     @endif

@@ -63,7 +63,7 @@ class ServiceController extends Controller
                 return $row->id;
             })
             ->editColumn('date', function ($row) {
-                return Carbon::parse($row->created_at)->format('d M, Y');
+                return Carbon::parse($row->created_at)->format('d M, Y h:i:s');
             })
             ->editColumn('service_type', function ($row) {
                 return ucfirst($row->service_type?->name);
@@ -125,7 +125,7 @@ class ServiceController extends Controller
                 return ucwords($row->vehicle?->name);
             })
             ->addColumn('vehicle_registration_number', function ($row) {
-                return strtoupper($row->vehicle?->registration_number) . ' ('.$row->vehicle?->name.')';
+                return strtoupper($row->user_vehicle?->registration_number) . ' ('.$row->user_vehicle?->vehicle?->name.')';
             })
             ->addColumn('charges', function ($row) {
                 return $row->charges;
@@ -198,7 +198,7 @@ class ServiceController extends Controller
         //
         $data['header_title'] = 'Services List';
         if ($request->ajax()) {
-            $data['records'] = Service::with('vehicle.user', 'payment_mode', 'service_type')
+            $data['records'] = Service::with('user_vehicle.user', 'payment_mode', 'service_type')
                                 ->orderBy('payment_status', 'asc')   // unpaid (0) first, paid (1) later
                                 ->orderBy('created_at', 'desc');     // then latest first
             return $this->datatables($request, $data);
@@ -224,7 +224,9 @@ class ServiceController extends Controller
         $request->validate([
             'vehicle_registration_number' => 'required',
             'vehicle_brand_id' => 'required',
+            'vehicle_brand_name' => 'required',
             'vehicle_id' => 'required',
+            'vehicle_name' => 'required',
             'service_type' => 'required',
             'charges' => 'required',
             'payment_mode_id' => 'required'
@@ -233,74 +235,121 @@ class ServiceController extends Controller
         DB::beginTransaction();
 
         try {
-            $vehicleRegNo = $request->vehicle_registration_number;
-            $userVehicle = UserVehicle::where('registration_number', $vehicleRegNo)->first();
+            $vehicleRegNo = strtolower($request->vehicle_registration_number);
+
+            $userRegisteredVehicle = UserVehicle::where('registration_number', $vehicleRegNo)->first();
             $user = null;
-            if ($userVehicle) {
-                // Vehicle exists
-                // Vehicle has no user assigned, try to find user by email
-                $user = User::where('id', $userVehicle->user_id)->first();
-                if (!$userVehicle->user_id) {
+            $vehicle = null;
+
+            // ========================
+            // Step 1: Handle Vehicle Brand
+            // ========================
+            $vehicleBrandId = $request->vehicle_brand_id;
+            if (!$vehicleBrandId && !empty($request->vehicle_brand_name)) {
+                $brand = VehicleBrand::firstOrCreate(
+                    ['name' => strtolower($request->vehicle_brand_name)]
+                );
+                $vehicleBrandId = $brand->id;
+            }
+
+            // ========================
+            // Step 2: Handle Vehicle
+            // ========================
+            $vehicleId = $request->vehicle_id;
+            if (!$vehicleId && !empty($request->vehicle_name)) {
+                $vehicleModel = Vehicle::firstOrCreate(
+                    ['name' => strtolower($request->vehicle_name)],
+                    [
+                        'vehicle_brand_id' => $vehicleBrandId
+                    ]
+                );
+                $vehicleId = $vehicleModel->id;
+                $vehicleModel->service_count = $vehicleModel->service_count + 1;
+                $vehicleModel->save();
+            }
+
+            if (isset($userRegisteredVehicle)) {
+                // Vehicle exists in UserVehicle
+                $user = $userRegisteredVehicle->user;
+
+                if (!$userRegisteredVehicle->user_id) {
                     if (!$user) {
                         $user = User::create([
-                            'name' => !empty($request->customer_name) ? strtolower($request->customer_name) : 'new_user',
-                            'email' => !empty($request->customer_email) ? $request->customer_email : (!empty($request->customer_name) ? $request->customer_name.'@test.com' : 'new_user'.$vehicleRegNo.'@test.com'),
-                            'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
-                            'address' => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
+                            'name'      => !empty($request->customer_name) ? strtolower($request->customer_name) : 'customer',
+                            'email'     => !empty($request->customer_email) ? $request->customer_email : (!empty($request->customer_name) ? $request->customer_name . '@test.com' : 'customer' . $vehicleRegNo . '@test.com'),
+                            'phone'     => $request->customer_phone ?? null,
+                            'address'   => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
                             'user_type' => 3,
                             'is_active' => 1,
-                            'password' => Hash::make('12345678'),
+                            'password'  => Hash::make('12345678'),
                         ]);
                     }
-                    $userVehicle->update(['user_id' => $user->id]);
+
+                    $userRegisteredVehicle->update(['user_id' => $user->id]);
                 }
+
                 $user->assignRole('customer');
+
+                $userRegisteredVehicle->service_count = $userRegisteredVehicle->service_count + 1;
+                $userRegisteredVehicle->vehicle_id = $vehicleId; // ensure correct vehicle_id assigned
+                $userRegisteredVehicle->save();
+
+                $vehicle = $userRegisteredVehicle;
             } else {
-                // Vehicle does not exist, create user and vehicle
+                // Vehicle does not exist in UserVehicle
                 $user = User::create([
-                    'name' => !empty($request->customer_name) ? strtolower($request->customer_name) : 'new_user',
-                    'email' => !empty($request->customer_email) ? $request->customer_email : 'new_user_' . $vehicleRegNo . '@test.com',
-                    'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
-                    'address' => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
+                    'name'      => !empty($request->customer_name) ? strtolower($request->customer_name) : 'customer',
+                    'email'     => !empty($request->customer_email) ? $request->customer_email : 'customer_' . $vehicleRegNo . '@test.com',
+                    'phone'     => $request->customer_phone ?? null,
+                    'address'   => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
                     'user_type' => 3,
                     'is_active' => 1,
-                    'password' => Hash::make('12345678'),
+                    'password'  => Hash::make('12345678'),
                 ]);
+
                 $user->assignRole('customer');
-                $vehicle = Vehicle::create([
-                    'name' => strtolower($request->vehicle_name),
-                    'user_id' => $user->id,
-                    'registration_number' => strtolower($vehicleRegNo),
+
+                $vehicle = UserVehicle::create([
+                    'user_id'             => $user->id,
+                    'vehicle_id'          => $vehicleId,
+                    'registration_number' => $vehicleRegNo,
+                    'service_count'       => 1,
                 ]);
             }
 
-            // Always create car wash service entry
+            // ========================
+            // Step 3: Always create service entry
+            // ========================
             Service::create([
-                'vehicle_id' => $vehicle->id,
-                'service_type_id' => $request->service_type,
-                'diesel' => $request->filled('diesel') ? 1 : 0,
-                'polish' => $request->filled('polish') ? 1 : 0,
-                'charges' => $request->charges ?? 0,
-                'discount' => $request->discount ?? 0,
-                'discount_reason' => strtolower($request->discount_reason) ?? null,
+                'user_vehicle_id'       => $vehicle->id,
+                'service_type_id'  => $request->service_type,
+                'diesel'           => $request->filled('diesel') ? 1 : 0,
+                'polish'           => $request->filled('polish') ? 1 : 0,
+                'charges'          => $request->charges ?? 0,
+                'discount'         => $request->discount ?? 0,
+                'discount_reason'  => !empty($request->discount_reason) ? strtolower($request->discount_reason) : null,
                 'collected_amount' => $request->collected_amount ?? 0,
-                'payment_mode_id' => $request->payment_mode_id ?? 0,
-                'payment_status' => 0,
-                // 'created_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
-                // 'updated_at' => !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::now(),
+                'payment_mode_id'  => $request->payment_mode_id ?? 0,
+                'payment_status'   => 0,
+                'overtime'   => $request->filled('overtime') ? 1 : 0,
+                // 'created_at' => !empty($request->date) ? Carbon::parse($request->date) : now(),
+                // 'updated_at' => !empty($request->date) ? Carbon::parse($request->date) : now(),
             ]);
+
+            $vehicle = Vehicle::where('id', $vehicleId)->first();
+            if (isset($vehicle)) {
+                $vehicle->service_count = $vehicle->service_count + 1;
+                $vehicle->save();
+            }
 
             DB::commit();
 
             return redirect()->back()->with('success', 'Entry added successfully');
-            // return redirect()->route('admin.services.list')->with('success', 'Entry added successfully');
         } catch (\Exception $e) {
             DB::rollBack();
-            ErrorLog::create([
-                'error' => $e->getMessage()
-            ]);
-            return redirect()->back()->with('error', 'Something went wrong');
+            return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
         }
+
     }
 
     /**
@@ -318,7 +367,7 @@ class ServiceController extends Controller
     {
         //
         $data['header_title'] = 'Edit Details';
-        $data['record'] = Service::with('vehicle.brand', 'user_vehicle')->where('id', $id)->first();
+        $data['record'] = Service::with('user_vehicle.vehicle.brand', 'user_vehicle')->where('id', $id)->first();
         return view('admin.services.edit', $data);
     }
 
@@ -338,52 +387,56 @@ class ServiceController extends Controller
                 $service->discount = $request->discount ?? 0;
                 $service->discount_reason = strtolower($request->discount_reason) ?? null;
                 $service->payment_mode_id = $request->payment_mode_id ?? 0;
+                $service->overtime = $request->filled('overtime') ? 1 : 0;
                 $service->created_at = !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::parse($service->created_at)->format('Y-m-d H:i:s');
                 $service->updated_at = !empty($request->date) ? Carbon::parse($request->date)->format('Y-m-d H:i:s') : Carbon::parse($service->updated_at)->format('Y-m-d H:i:s');
                 $service->save();
             }
-            $user = User::where('phone', $request->customer_phone)->first();
-            if (isset($user)) {
-                $user->name = $request->customer_name;
-                $user->phone = $request->customer_phone;
-                $user->address = $request->customer_address;
-                $user->save();
+            $vehicleBrandData = VehicleBrand::where('id', $request->vehicle_brand_id)->first();
+            $vehicleData = Vehicle::where('id', $request->vehicle_id)->first();
+            $userData = User::where('id', $service->user_vehicle?->user_id)->first();
+            if (isset($userData)) {
+                $userData->name = $request->customer_name ? $request->customer_name : 'customer';
+                $userData->phone = $request->customer_phone ? $request->customer_phone : '';
+                $userData->address = $request->customer_address ? $request->customer_address : 'address';
+                $userData->user_address_id = $request->customer_address_id ? $request->customer_address_id : '';
+                $customerEmail = '';
+                if ($request->customer_email && $userData->email == str_replace(' ', '_', $request->customer_name) . '_' . str_replace('-', '_', $service->user_vehicle?->registration_number) . '@test.com') {
+                    $customerEmail = $userData->email;
+                } else {
+                    $customerEmail = str_replace(' ', '_', $request->customer_name). '_' . str_replace('-', '_', $service->user_vehicle?->registration_number) . '@test.com';
+                }
+                $userData->email =  $customerEmail;
+                $userData->save();
+                $userData->assignRole('customer');
+            }
+            if (!isset($vehicleBrandData)) {
+                $vehicleBrandData = new VehicleBrand();
+                $vehicleBrandData->name = $request->vehicle_brand_name;
+                $vehicleBrandData->save();
+            }
+            if (!isset($vehicleData)) {
+                $vehicleData = new Vehicle();
+                $vehicleData->name = $request->vehicle_name;
+                $vehicleData->vehicle_brand_id = $vehicleBrandData->id;
+                $vehicleData->save();
+            }
+            $userRegisteredVehicle = UserVehicle::where('registration_number', $request->vehicle_registration_number)->first();
+            if (isset($userRegisteredVehicle)) {
+                $userRegisteredVehicle->user_id = $userData->id;
+                $userRegisteredVehicle->vehicle_id = $vehicleData->id;
+                $userRegisteredVehicle->registration_number = $request->vehicle_registration_number;
+                $userRegisteredVehicle->save();
             } else {
-                $user = User::create([
-                    'name' => !empty($request->customer_name) ? strtolower($request->customer_name) : 'new_user',
-                    'email' => !empty($request->customer_email) ? $request->customer_email : 'new_user_' . $request->vehicle_registration_number . '@test.com',
-                    'phone' => !empty($request->customer_phone) ? $request->customer_phone : null,
-                    'address' => !empty($request->customer_address) ? strtolower($request->customer_address) : null,
-                    'user_type' => 3,
-                    'is_active' => 1,
-                    'password' => Hash::make('12345678'),
-                ]);
-                $user->assignRole('customer');
-            }
-            $vehicleBrand = VehicleBrand::where('id', $request->vehicle_brand_id)->first();
-            if (!isset($vehicleBrand)) {
-                $vehicleBrand = new VehicleBrand();
-                $vehicleBrand->name = $request->vehicle_brand_name;
-                $vehicleBrand->save();
-            }
-            $vehicle = Vehicle::where('id', $request->vehicle_id)->where('vehicle_brand_id', $vehicleBrand->id)->first();
-            if (!isset($vehicle)) {
-                $vehicle = new Vehicle();
-                $vehicle->name = $request->vehicle_name;
-                $vehicle->vehicle_brand_id = $vehicleBrand->id;
-                $vehicle->save();
-            }
-            $userVehicle = UserVehicle::where('vehicle_id', $vehicle->vehicle_id)->where('registration_number', $request->vehicle_registration_number)->first();
-            if (!isset($userVehicle)) {
                 UserVehicle::create([
-                    'user_id' => $user->id,
-                    'vehicle_id' => $vehicle->id,
+                    'user_id' => $userData->id,
+                    'vehicle_id' => $vehicleData->id,
                     'registration_number' => $request->vehicle_registration_number,
                 ]);
             }
             return redirect()->back()->with('success', 'Updated successfully');
-            // return redirect()->route('admin.services.list')->with('success', 'Updated successfully');
         } catch (\Exception $e) {
+            dd($e->getMessage());
             return redirect()->back()->with('error', 'Something went wrong');
         }
     }
@@ -402,7 +455,14 @@ class ServiceController extends Controller
             $service = Service::where('id', $id)->first();
             if (isset($service)) {
                 if ($service->payment_status == 0 && $service->collected_amount == 0) {
-                    $service->collected_amount = $service->charges - $service->discount;
+                    if ($service->overtime == 1) {
+                        // 50% of charges minus discount
+                        $service->collected_amount = $service->charges - $service->discount;
+                        $service->overtime_amount = (int) round(($service->charges - $service->discount) * 0.5);
+                    } else {
+                        // Full charges minus discount
+                        $service->collected_amount = $service->charges - $service->discount;
+                    }
                 }
                 $service->payment_status = $request->status;
             }

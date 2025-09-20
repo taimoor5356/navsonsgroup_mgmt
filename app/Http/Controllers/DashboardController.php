@@ -82,29 +82,29 @@ class DashboardController extends Controller
     }
 
     // Daily sale
-public function dayWiseSale()
-{
-    $startDate = now()->startOfMonth()->format('Y-m-d 00:00:00');
-    $endDate   = now()->endOfDay()->format('Y-m-d H:i:s');
+    public function dayWiseSale()
+    {
+        $startDate = now()->startOfMonth()->format('Y-m-d 00:00:00');
+        $endDate   = now()->endOfDay()->format('Y-m-d H:i:s');
 
-    return Service::selectRaw("
-                DATE(created_at) as sale_date,
-                COALESCE(SUM(collected_amount), 0) as total_sales
-            ")
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy('sale_date')
-            ->orderBy('sale_date', 'desc')
-            ->get();
-}
-
+        return Service::selectRaw("
+                    DATE(created_at) as sale_date,
+                    COALESCE(SUM(collected_amount), 0) as total_sales
+                ")
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->groupBy('sale_date')
+                ->orderBy('sale_date', 'desc')
+                ->get();
+    }
 
     // Sales / Payments / Discounts
     public function salesSummary($startDate, $endDate = null)
     {
         $query = Service::selectRaw("
             SUM(collected_amount) as total_sales,
-            SUM(CASE WHEN payment_mode_id = 1 THEN collected_amount ELSE 0 END) as total_cash_received,
-            SUM(CASE WHEN payment_mode_id != 1 THEN collected_amount ELSE 0 END) as total_online_payment_received,
+            SUM(CASE WHEN payment_mode_id = 1 THEN (collected_amount) ELSE 0 END) as total_cash_received,
+            SUM(CASE WHEN payment_mode_id != 1 THEN (collected_amount) ELSE 0 END) as total_online_payment_received,
+            SUM(CASE WHEN payment_mode_id = 1 THEN (overtime_amount) ELSE 0 END) as total_overtime_payment,
             SUM(discount) as total_discounts
         ");
 

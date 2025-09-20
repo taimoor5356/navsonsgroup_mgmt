@@ -26,15 +26,20 @@
         $discountAmount = 0;
         $discountReason = '';
         $collectedAmount = 0;
+        $overtime = 0;
         $paymentModeId = 0;
+        $vehicleBrandId = '';
         $vehicleBrandName = '';
+        $vehicleId = '';
         $vehicleName = '';
         $registrationNumber = '';
         if (isset($record)) {
-            if (isset($record->vehicle)) {
-                $vehicleBrandName = $record->vehicle?->brand?->name;
-                $vehicleName = $record->vehicle?->name;
-                $registrationNumber = $record->vehicle?->registration_number;
+            if (isset($record->user_vehicle?->vehicle)) {
+                $vehicleBrandId = $record->user_vehicle?->vehicle?->brand?->id;
+                $vehicleBrandName = $record->user_vehicle?->vehicle?->brand?->name;
+                $vehicleId = $record->user_vehicle?->vehicle?->id;
+                $vehicleName = $record->user_vehicle?->vehicle?->name;
+                $registrationNumber = $record->user_vehicle?->registration_number;
                 $diesel = $record->diesel;
                 $polish = $record->polish;
                 $serviceTypeId = $record->service_type_id;
@@ -42,6 +47,7 @@
                 $discountAmount = $record->discount;
                 $discountReason = $record->discount_reason;
                 $collectedAmount = $record->collected_amount;
+                $overtime = $record->overtime;
                 $paymentModeId = $record->payment_mode_id;
                 $paymentStatus = $record->payment_status;
             }
@@ -81,7 +87,7 @@
                 id="vehicle-brand-name" 
                 placeholder="Enter Vehicle Brand Name" 
                 autocomplete="off" style="text-align: left;">
-            <input type="hidden" id="vehicle-brand-id" name="vehicle_brand_id" value="">
+            <input type="hidden" id="vehicle-brand-id" name="vehicle_brand_id" value="{{ isset($record) ? $vehicleBrandId : '' }}">
         </div>
 
         <!-- Suggestions dropdown -->
@@ -100,7 +106,7 @@
                 id="vehicle-name" 
                 placeholder="Enter Vehicle Name" 
                 autocomplete="off" style="text-align: left;">
-            <input type="hidden" id="vehicle-id" name="vehicle_id" value="">
+            <input type="hidden" id="vehicle-id" name="vehicle_id" value="{{ isset($record) ? $vehicleId : '' }}">
         </div>
 
         <!-- Suggestions dropdown -->
@@ -142,6 +148,9 @@
         <label class="form-label d-flex justify-content-between align-items-center" for="charges">
             <div>
                 Charges
+            </div>
+            <div>
+                <input type="checkbox" name="overtime" class="mt-1" {{ (isset($record) && $overtime == 1) ? 'checked' : '' }}> OverTime
             </div>
         </label>
         <div class="input-group input-group-merge">
@@ -195,21 +204,22 @@
                 <label class="form-label" for="customer-name">Customer Name</label>
                 <div class="input-group input-group-merge">
                     <span class="input-group-text"><i class="bx bx-user"></i></span>
-                    <input type="text" name="customer_name" value="{{isset($record) ? $record->vehicle?->user?->name : ''}}" id="customer-name" class="form-control" placeholder="Enter Customer Name" aria-label="john.doe" aria-describedby="customer-name2">
+                    <input type="text" name="customer_name" value="{{isset($record) ? $record->user_vehicle?->user?->name : ''}}" id="customer-name" class="form-control" placeholder="Enter Customer Name" aria-label="john.doe" aria-describedby="customer-name2">
                 </div>
             </div>
             <div class="mb-3 col-md-6 col-12">
                 <label class="form-label" for="customer-phone">Customer Phone</label>
                 <div class="input-group input-group-merge">
                     <span class="input-group-text"><i class="bx bx-phone"></i></span>
-                    <input type="text" name="customer_phone" value="{{isset($record) ? $record->vehicle?->user?->phone : ''}}" id="customer-phone" class="form-control" placeholder="Enter Customer Phone" aria-label="+923001234567" aria-describedby="customer-phone2">
+                    <input type="text" name="customer_phone" value="{{isset($record) ? $record->user_vehicle?->user?->phone : ''}}" id="customer-phone" class="form-control" placeholder="Enter Customer Phone" aria-label="+923001234567" aria-describedby="customer-phone2">
                 </div>
+                <input type="hidden" name="customer_email" value="{{isset($record) ? $record->user_vehicle?->user?->email : ''}}" id="customer-email">
             </div>
             <!-- <div class="mb-3 col-md-6 col-12">
                 <label class="form-label" for="customer-address">Customer Address</label>
                 <div class="input-group input-group-merge">
                     <span class="input-group-text"><i class="bx bx-trip"></i></span>
-                    <input type="text" name="customer_address" value="{{isset($record) ? $record->vehicle?->user?->address : ''}}" class="form-control" placeholder="Enter Customer Address" aria-label="ghouri town" aria-describedby="customer-address2">
+                    <input type="text" name="customer_address" value="{{isset($record) ? $record->user_vehicle?->vehicle?->user?->address : ''}}" class="form-control" placeholder="Enter Customer Address" aria-label="ghouri town" aria-describedby="customer-address2">
                 </div>
             </div> -->
             
@@ -218,12 +228,12 @@
                 <div class="input-group input-group-merge">
                     <span id="customer-address2" class="input-group-text"><i class="bx bx-car"></i></span>
                     <input type="text" name="customer_address" 
-                        value="" 
+                        value="{{isset($record) ? $record->user_vehicle?->user?->user_address?->name : ''}}" 
                         class="form-control" 
                         id="customer-address" 
                         placeholder="Enter Customer Address" 
                         autocomplete="off" style="text-align: left;">
-                    <input type="hidden" id="customer-address-id" name="customer_address_id" value="">
+                    <input type="hidden" id="customer-address-id" name="customer_address_id" value="{{isset($record) ? $record->user_vehicle?->user?->user_address?->id : ''}}">
                 </div>
 
                 <!-- Suggestions dropdown -->
