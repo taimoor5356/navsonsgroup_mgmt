@@ -50,13 +50,13 @@ class UserController extends Controller
                 return ucwords($row->email);
             })
             ->addColumn('total_salary', function ($row) {
-                return number_format(25000, 2);
+                return number_format(20000, 2);
             })
             ->addColumn('loan', function ($row) {
                 return ucwords($row->expenses?->sum('amount'));
             })
             ->addColumn('salary_left', function ($row) {
-                return number_format((25000 - $row->expenses?->sum('amount')), 2);
+                return number_format((20000 - $row->expenses?->sum('amount')), 2);
             })
             ->addColumn('total_services', function ($row) {
                 $vehicle = $row->vehicles?->first();
