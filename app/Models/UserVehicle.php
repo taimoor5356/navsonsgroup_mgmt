@@ -20,4 +20,9 @@ class UserVehicle extends Model
     {
         return $this->belongsTo(Vehicle::class, 'vehicle_id', 'id');
     }
+
+    public function services()
+    {
+        return $this->hasMany(Service::class, 'user_vehicle_id', 'id');
+    }
 }

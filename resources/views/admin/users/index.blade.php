@@ -74,7 +74,7 @@
                 ajax: {
                     url: url,
                 },
-                pageLength: 100,       // show 100 records
+                pageLength: 10,       // show 100 records
                 lengthChange: false,   // hide "Show X entries" dropdown
                 order: [], // 👈 important: disable client-side ordering
                 // paging: false,         // disable pagination
@@ -125,7 +125,7 @@
                         data: 'actions'
                     }
                 ],
-                order: [[0, 'desc']], // 👈 Default order: first column descending
+                order: [], // 👈 Default order: first column descending
                 createdRow: function(row, data, dataIndex) {
                     var index = dataIndex + 1; // Start from 1
                     $('td', row).eq(0).text(index); // Update the first cell of the row

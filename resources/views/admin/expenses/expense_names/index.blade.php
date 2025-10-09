@@ -11,27 +11,20 @@
                 <h4 class="fw-bold py-3 mb-4"><span class="text-dark fw-light">{{$header_title}}</span></h4>
             </div>
             <div class="butns">
-                <a href="{{url('admin/expenses/create')}}" class="btn btn-primary">Add New</a>
-                <a href="{{url('admin/expenses/expense-names/create')}}" class="btn btn-danger">Add New Expense Names</a>
+                <a href="{{url('admin/expenses/expense-names/create')}}" class="btn btn-primary">Add New</a>
             </div>
         </div>
     </div>
     <!-- Responsive Table -->
     <div class="card">
-        <div class="card-header">
-            <a href="{{url('admin/expenses/expense-names/list')}}" class="btn btn-primary">View Expense Names</a>
-        </div>
         <div class="card-body p-2">
             <div class="table-responsive text-nowrap">
                 <table class="table data-table display responsive nowrap" width="100%">
                     <thead>
                         <tr class="text-nowrap">
                             <th>#</th>
-                            <th>Date</th>
+                            <th>Name</th>
                             <th>Expense Type</th>
-                            <th>Expense Name</th>
-                            <th>Total Expense</th>
-                            <th>Description</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -59,9 +52,9 @@ $(document).ready(function() {
             serverSide: true,
             scrollX: true,
             ajax: {
-                url: "{{url('admin/expenses/list')}}",
+                url: "{{url('admin/expenses/expense-names/list')}}",
             },
-            pageLength: 10,       // show 10 records
+            pageLength: 100,       // show 100 records
             lengthChange: false,   // hide "Show X entries" dropdown
             order: [], // 👈 important: disable client-side ordering
             // paging: false,         // disable pagination
@@ -72,24 +65,12 @@ $(document).ready(function() {
                     orderable: false
                 },
                 {
-                    name: 'date',
-                    data: 'date'
+                    name: 'name',
+                    data: 'name'
                 },
                 {
                     name: 'expense_type',
                     data: 'expense_type'
-                },
-                {
-                    name: 'expense_name',
-                    data: 'expense_name'
-                },
-                {
-                    name: 'expense_amount',
-                    data: 'expense_amount'
-                },
-                {
-                    name: 'description',
-                    data: 'description'
                 },
                 {
                     className: 'text-center',

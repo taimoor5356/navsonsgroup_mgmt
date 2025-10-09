@@ -6,7 +6,7 @@
             </div>
         </label>
         <div class="input-group input-group-merge">
-            <select name="expense_type_id" id="expense_type_id" class="form-control">
+            <select name="expense_type_id" id="expense-type" class="form-control" required>
                 <option value="" selected disabled>Expense Type</option>
                 @foreach (\App\Models\ExpenseType::get() as $expenseType)
                     <option value="{{$expenseType->id}}" @isset($record){{$expenseType->id == $record->expense_type_id ? 'selected' : ''}}@endisset>{{strtoupper(str_replace('_', ' ', $expenseType->name))}}</option>
@@ -15,11 +15,20 @@
         </div>
     </div>
     <div class="mb-3 col-md-4 col-12">
-        <label class="form-label" for="name">Name</label>
+        <label class="form-label d-flex justify-content-between align-items-center" for="expense-name-id">
+            <div>
+                Expense Name
+            </div>
+        </label>
+        <!-- <label class="form-label" for="name">Name</label>
         <div class="input-group input-group-merge">
             <span id="name2" class="input-group-text"><i class="bx bx-money"></i></span>
             <input type="text" value="{{isset($record) ? $record->name : ''}}" name="name" class="form-control" id="name" placeholder="Enter name" aria-label="name" aria-describedby="name2">
-        </div>
+        </div> -->
+        <select name="expense_name_id" id="expense-name-id" class="form-control" required>
+            <option value="" selected disabled>Expense Name</option>
+            
+        </select>
     </div>
     <div class="mb-3 col-md-4 col-12">
         <label class="form-label" for="user_id">Select User</label>
@@ -34,14 +43,14 @@
         <label class="form-label" for="amount">Amount</label>
         <div class="input-group input-group-merge">
             <span id="amount2" class="input-group-text"><i class="bx bx-money"></i></span>
-            <input type="number" value="{{isset($record) ? $record->amount : ''}}" name="amount" class="form-control" id="amount" placeholder="Enter amount" aria-label="amount" aria-describedby="amount2">
+            <input type="number" value="{{isset($record) ? $record->amount : ''}}" name="amount" class="form-control" id="amount" placeholder="Enter amount" aria-label="amount" aria-describedby="amount2" required>
         </div>
     </div>
     <div class="mb-3 col-md-4 col-12">
         <label class="form-label" for="description">Description</label>
         <div class="input-group input-group-merge">
             <span id="description2" class="input-group-text"><i class="bx bx-pencil"></i></span>
-            <input type="text" value="{{isset($record) ? $record->description : ''}}" name="description" class="form-control" id="description" placeholder="Enter description" aria-label="description" aria-describedby="description2">
+            <input type="text" value="{{isset($record) ? $record->description : ''}}" name="description" class="form-control" id="description" placeholder="Enter description" aria-label="description" aria-describedby="description2" required>
         </div>
     </div>
     <div class="mb-3 col-md-4 col-12">
@@ -51,7 +60,7 @@
             </div>
         </label>
         <div class="input-group input-group-merge">
-            <select name="payment_mode_id" id="payment_mode_id" class="form-control">
+            <select name="payment_mode_id" id="payment_mode_id" class="form-control" required>
                 <option value="" selected disabled>Payment Mode</option>
                 @foreach (\App\Models\PaymentMode::get() as $paymentMode)
                     <option value="{{$paymentMode->id}}" @isset($record){{$paymentMode->id == $record->payment_mode_id ? 'selected' : ''}}@endisset>{{strtoupper(str_replace('_', ' ', $paymentMode->name))}}</option>
@@ -69,6 +78,41 @@
 
 @section('_scripts')
 <script>
+$(document).ready(function () {
+    // Blade variables for edit case
+    var selectedExpenseType = "{{ $record->expense_type_id ?? '' }}";
+    var selectedExpenseName = "{{ $record->expense_name_id ?? '' }}";
+
+    // On change -> fetch expense names
+    $(document).on('change', '#expense-type', function() {
+        let _this = $(this);
+        if (_this.val() != '') {
+            $.ajax({
+                url: "{{ route('fetch_expense_names') }}",
+                method: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    expense_type_id: _this.val()
+                },
+                success:function(response) {
+                    if (response.status == true) {
+                        var _html = `<option value="" disabled>Expense Name</option>`;
+                        response.data.forEach(d => {
+                            let selected = (d.id == selectedExpenseName) ? 'selected' : '';
+                            _html += `<option value="${d.id}" ${selected}>${d.name}</option>`;
+                        });
+                        $('#expense-name-id').html(_html);
+                    }
+                }
+            });
+        }
+    });
+
+    // ✅ Trigger after binding event
+    if (selectedExpenseType) {
+        $('#expense-type').val(selectedExpenseType).trigger('change');
+    }
+});
 
 </script>
 @endsection
