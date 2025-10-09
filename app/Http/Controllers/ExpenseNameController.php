@@ -3,15 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\ErrorLog;
-use App\Models\Expense;
+use App\Models\ExpenseName;
 use App\Models\ExpenseType;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use DataTables;
 
-class ExpenseController extends Controller
+class ExpenseNameController extends Controller
 {
     public function datatables($request, $records, $trashed = null)
     {
@@ -31,20 +30,11 @@ class ExpenseController extends Controller
             ->editColumn('sr_no', function ($row) {
                 return $row->id;
             })
-            ->addColumn('date', function ($row) {
-                return Carbon::parse($row->created_at)->format('d M, Y');
+            ->addColumn('name', function ($row) {
+                return ucwords(str_replace('_', ' ', $row->name));
             })
             ->addColumn('expense_type', function ($row) {
                 return ucwords(str_replace('_', ' ', $row->expense_type?->name));
-            })
-            ->addColumn('expense_name', function ($row) {
-                return ucwords(str_replace('_', ' ', $row->expense_name?->name));
-            })
-            ->addColumn('expense_amount', function ($row) {
-                return $row->amount;
-            })
-            ->addColumn('description', function ($row) {
-                return $row->description;
             })
             ->addColumn('actions', function ($row) use ($trashed) {
                 $btns = '
@@ -70,7 +60,7 @@ class ExpenseController extends Controller
                     }
                 return $btns;
             })
-            ->rawColumns(['sr_no', 'checkbox', 'email', 'expense_name', 'role', 'actions'])
+            ->rawColumns(['sr_no', 'checkbox', 'email', 'name', 'role', 'actions'])
             ->setTotalRecords($totalRecords)
             ->setFilteredRecords($totalRecords) // For simplicity, same as totalRecords
             ->skipPaging()
@@ -82,12 +72,12 @@ class ExpenseController extends Controller
     public function index(Request $request)
     {
         //
-        $data['header_title'] = 'Expenses List';
+        $data['header_title'] = 'Expense Names List';
         if ($request->ajax()) {
-            $data['records'] = Expense::with('expense_type', 'expense_name')->orderBy('created_at', 'desc');
+            $data['records'] = ExpenseName::with('expense_type')->orderBy('created_at', 'desc');
             return $this->datatables($request, $data);
         }
-        return view('admin.expenses.index', $data);
+        return view('admin.expenses.expense_names.index', $data);
     }
 
     /**
@@ -96,9 +86,9 @@ class ExpenseController extends Controller
     public function create()
     {
         //
-        $data['header_title'] = 'Add New Expense';
+        $data['header_title'] = 'Add New Expense Name';
         $data['expenseTypes'] = ExpenseType::get();
-        return view('admin.expenses.create', $data);
+        return view('admin.expenses.expense_names.create', $data);
     }
 
     /**
@@ -108,25 +98,16 @@ class ExpenseController extends Controller
     {
         //
         $request->validate([
+            'name' => 'required',
             'expense_type_id' => 'required',
-            'expense_name_id' => 'required',
-            'amount' => 'required|integer',
-            'description' => 'required',
-            'payment_mode_id' => 'required',
         ]);
 
         DB::beginTransaction();
 
         try {
-            Expense::create([
-                'expense_name_id' => $request->expense_name_id,
-                'user_id' => !empty($request->user_id) ? $request->user_id : null,
+            ExpenseName::create([
+                'name' => !empty($request->name) ? $request->name : null,
                 'expense_type_id' => $request->expense_type_id,
-                'amount' => $request->amount,
-                'description' => $request->description,
-                'payment_mode_id' => $request->payment_mode_id,
-                'created_at' => !empty($request->date) ? Carbon::parse($request->date) : Carbon::now(),
-                'updated_at' => !empty($request->date) ? Carbon::parse($request->date) : Carbon::now(),
             ]);
 
             DB::commit();
@@ -145,7 +126,7 @@ class ExpenseController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(ExpenseName $expenseName)
     {
         //
     }
@@ -153,61 +134,32 @@ class ExpenseController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(ExpenseName $expenseName)
     {
         //
-        $data['header_title'] = 'Edit Expense';
-        $data['expenseTypes'] = ExpenseType::get();
-        $data['record'] = Expense::where('id', $id)->first();
-        return view('admin.expenses.edit', $data);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, ExpenseName $expenseName)
     {
         //
-        $request->validate([
-            'expense_name_id' => 'required',
-            'expense_type_id' => 'required',
-            'amount' => 'required|integer',
-            'description' => 'required',
-            'payment_mode_id' => 'required',
-        ]);
-
-        DB::beginTransaction();
-
-        try {
-            Expense::where('id', $id)->update([
-                'expense_name_id' => $request->expense_name_id,
-                'user_id' => !empty($request->user_id) ? $request->user_id : null,
-                'expense_type_id' => $request->expense_type_id,
-                'amount' => $request->amount,
-                'description' => $request->description,
-                'payment_mode_id' => $request->payment_mode_id,
-                'created_at' => !empty($request->date) ? Carbon::parse($request->date) : Carbon::now(),
-                'updated_at' => !empty($request->date) ? Carbon::parse($request->date) : Carbon::now(),
-            ]);
-
-            DB::commit();
-
-            return redirect()->back()->with('success', 'Entry added successfully');
-            // return redirect()->route('admin.expenses.list')->with('success', 'Entry added successfully');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            ErrorLog::create([
-                'error' => $e->getMessage()
-            ]);
-            return redirect()->back()->with('error', 'Something went wrong');
-        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(ExpenseName $expenseName)
     {
         //
+    }
+
+    public function fetchExpenseNames(Request $request) {
+        $expenseNames = ExpenseName::where('expense_type_id', $request->expense_type_id)->get();
+        return response()->json([
+            'status' => true,
+            'data' => $expenseNames
+        ]);
     }
 }

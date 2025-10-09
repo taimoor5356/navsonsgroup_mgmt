@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\AclController;
+use App\Http\Controllers\AmountTransactionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DetailedReportController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ExpenseNameController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\FineController;
 use App\Http\Controllers\NotificationController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserGroupController;
 use App\Http\Controllers\UserVehicleController;
 use App\Http\Controllers\VehicleController;
+use App\Models\AmountTransaction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -102,6 +105,16 @@ Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
             Route::get('/trashed', [ExpenseController::class, 'trashed'])->name('admin.expenses.trashed');
             Route::get('/restore/{id}', [ExpenseController::class, 'restore'])->name('admin.expenses.restore')->middleware('role:admin');
             Route::post('/export', [ExpenseController::class, 'export'])->name('admin.expenses.export');
+
+            // Expense Names
+            Route::get('/expense-names/list', [ExpenseNameController::class, 'index'])->name('admin.expense_name.list');
+            Route::get('/expense-names/create', [ExpenseNameController::class, 'create'])->name('admin.expense_name.create');
+            Route::post('/expense-names/store', [ExpenseNameController::class, 'store'])->name('admin.expense_name.store')->middleware('role:admin|manager');
+            Route::get('/expense-names/edit/{id}', [ExpenseNameController::class, 'edit'])->name('admin.expense_name.edit');
+            Route::post('/expense-names/update/{id}', [ExpenseNameController::class, 'update'])->name('admin.expense_name.update')->middleware('role:admin');
+            Route::post('/expense-names/delete', [ExpenseNameController::class, 'destroy'])->name('admin.expense_name.destroy')->middleware('role:admin');
+
+            Route::post('/fetch-expense-names', [ExpenseNameController::class, 'fetchExpenseNames'])->name('fetch_expense_names');
         });
         //Fines Routes
         Route::group(['prefix' => '/fines'], function () {
@@ -124,6 +137,10 @@ Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
             Route::post('/role/store', [AclController::class, 'store'])->name('admin.acl.role.store');
             Route::get('/role/{id}/edit', [AclController::class, 'edit'])->name('admin.acl.role.edit');
             Route::post('/role/update/{id}', [AclController::class, 'update'])->name('admin.acl.role.update');
+        });
+        //Payment Routes
+        Route::group(['prefix' => '/payments'], function () {
+            Route::post('/cash-in-hand', [AmountTransactionController::class, 'addCashInHandAmount'])->name('admin.payments.add_cash_in_hand');
         });
     });
     

@@ -25,10 +25,17 @@
 <div class="container-fluid flex-grow-1 container-p-y">
     @include('_messages')
     <div class="row">
-        <div class="col-12 d-flex justify-content-between">
+        <div class="col-12 d-flex justify-content-between align-items-center">
             <div class="breadcrumb-list">
                 <h4 class="fw-bold py-3 mb-4">Dashboard</h4>
             </div>
+            @if(Auth::user()->hasRole('admin'))
+            <div class="breadcrumb-list">
+                <button class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#add-cih-amount">
+                    Add CIH Amount
+                </button>
+            </div>
+            @endif
         </div>
     </div>
     <div class="row">
@@ -76,23 +83,21 @@
                                         $end   = \Carbon\Carbon::parse($end)->endOfDay();
                                         $daysDiff = $start->diffInDays($end) + 1;
                                     } else {
-                                        $firstService = \App\Models\Service::orderBy('created_at')->first();
-                                        $start = $firstService ? \Carbon\Carbon::parse($firstService->created_at)->startOfDay() : now()->startOfDay();
-                                        $end = now()->endOfDay();
+                                        $start = \Carbon\Carbon::now()->startOfMonth();
+                                        $end = \Carbon\Carbon::now()->endOfDay();
                                         $daysDiff = $start->diffInDays($end) + 1;
                                     }
-                                    $totalSales = $query->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))->sum('collected_amount');
+                                    $totalSales = $query->whereBetween('created_at', [$start, $end])->sum('collected_amount');
                                     $avgPerDay = $daysDiff > 0 ? number_format($totalSales / $daysDiff, 2) : 0;
                                 @endphp
                                 <small>(Avg/Day: {{ $avgPerDay }})</small>
                                 <br>
                                 <a href="{{ route('admin.services.list') }}" class="btn btn-success rounded btn-xs">View More</a>
                             </div>
-
                             <!-- Scrollable text at right side -->
                             <div style="padding: 5px; max-height:120px; overflow-y:auto; font-size:9px; margin-left:15px; white-space:nowrap; scrollbar-width: thin; scrollbar-color: #ccc transparent;">
                                 @foreach ($dayWiseSale as $day)
-                                    <div>{{ \Carbon\Carbon::parse($day->sale_date)->format('d, M') }}) Rs {{ number_format($day->total_sales) }}</div>
+                                    <div>{{ \Carbon\Carbon::parse($day->sale_date)->format('d, D') }}) Rs {{ number_format($day->total_sales) }}</div>
                                 @endforeach
                             </div>
 
@@ -101,56 +106,123 @@
                 </div>
                 <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
                     <div class="card">
-                        <div class="card-body">
-                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Expenses</span>
-                            <h3 class="card-title text-nowrap mb-2 toggle-amount" data-value="Rs {{!empty($expensesSummary) ? number_format($expensesSummary->total_expenses, 2) : 0}}">Rs {{!empty($expensesSummary) ? number_format($expensesSummary->total_expenses, 2) : 0}}</h3>
-                            @php
-                                $dateRange = request('date_range');
-                                $query = \App\Models\Expense::query();
-
-                                if ($dateRange) {
-                                    [$start, $end] = explode(' - ', $dateRange);
-                                    $start = \Carbon\Carbon::parse($start)->startOfDay();
-                                    $end   = \Carbon\Carbon::parse($end)->endOfDay();
-                                }
-                            @endphp
-
-                            <small>
-                                (Carwash Expenses: 
-                                {{ number_format(
-                                    \App\Models\Expense::whereNotIn('expense_type_id', [1, 2])
-                                        ->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))
-                                        ->sum('amount'), 2)
-                                }})
-                            </small><br>
-
-                            <small>
-                                (Food Expenses: 
-                                {{ number_format(
-                                    \App\Models\Expense::where('expense_type_id', 1)
-                                        ->where('user_id', null)
-                                        ->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))
-                                        ->sum('amount'), 2)
-                                }})
-                            </small><br>
-
-                            <small>
-                                (Salaries: 
-                                {{ number_format(
-                                    \App\Models\Expense::where('expense_type_id', 2)
-                                        ->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))
-                                        ->sum('amount'), 2)
-                                }})
-                            </small><br>
-                            <a href="{{route('admin.expenses.list')}}" class="btn btn-danger rounded btn-xs">View More</a>
+                        <div class="card-body d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="d-block mb-1">
+                                    <i class="menu-icon tf-icons bx bx-money text-danger"></i> Total Expenses
+                                </span>
+                                <h3 class="card-title text-nowrap mb-2 toggle-amount" data-value="Rs {{!empty($expensesSummary) ? number_format(($expensesSummary->total_expenses + $salesSummary->total_overtime_payment), 2) : 0}}">Rs {{!empty($expensesSummary) ? number_format(($expensesSummary->total_expenses + $salesSummary->total_overtime_payment), 2) : 0}}
+                                </h3>
+                                @php
+                                    // Calculate average sales per day
+                                    $dateRange = request('date_range');
+                                    $query = \App\Models\Expense::query();
+                                    if ($dateRange) {
+                                        [$start, $end] = explode(' - ', $dateRange);
+                                        $start = \Carbon\Carbon::parse($start)->startOfDay();
+                                        $end   = \Carbon\Carbon::parse($end)->endOfDay();
+                                        $daysDiff = $start->diffInDays($end) + 1;
+                                    } else {
+                                        $start = \Carbon\Carbon::now()->startOfMonth();
+                                        $end = \Carbon\Carbon::now()->endOfDay();
+                                        $daysDiff = $start->diffInDays($end) + 1;
+                                    }
+                                    $totalExpenses = $query->whereBetween('created_at', [$start, $end])->sum('amount');
+                                    $avgPerDay = $daysDiff > 0 ? number_format(($totalExpenses + $salesSummary->total_overtime_payment) / $daysDiff, 2) : 0;
+                                @endphp
+                                <small>(Avg/Day: {{ $avgPerDay }})</small>
+                                <br>
+                                <a href="{{route('admin.expenses.list')}}" class="btn btn-danger rounded btn-xs">View More</a>
+                            </div>
+                            <!-- Scrollable text at right side -->
+                            <div style="padding: 5px; max-height:120px; overflow-y:auto; font-size:9px; margin-left:15px; white-space:nowrap; scrollbar-width: thin; scrollbar-color: #ccc transparent;">
+                                <div>
+                                    (Wash Items: 
+                                    {{ number_format(
+                                        \App\Models\Expense::whereNotIn('expense_type_id', [1, 2])
+                                            ->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+                                            ->sum('amount'), 2)
+                                    }})
+                                </div>
+                                <div>
+                                    (Food: 
+                                    {{ number_format(
+                                        \App\Models\Expense::where('expense_type_id', 1)
+                                            ->where('user_id', null)
+                                            ->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+                                            ->sum('amount'), 2)
+                                    }})
+                                </div>
+                                <div>
+                                    (Salaries: 
+                                    {{ number_format(
+                                        \App\Models\Expense::where('expense_type_id', 2)
+                                            ->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+                                            ->sum('amount'), 2)
+                                    }})
+                                </div>
+                                <div>
+                                    (Overtime: 
+                                    {{ number_format(
+                                        \App\Models\Service::where('payment_status', 1)->where('overtime', 1)
+                                            ->when($dateRange, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+                                            ->sum('overtime_amount'), 2)
+                                    }})
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
                     <div class="card">
-                        <div class="card-body">
-                            <span class="d-block mb-1"><i class="menu-icon tf-icons bx bx-money text-warning"></i> Total Payment Received</span>
-                            <h3 class="card-title text-nowrap mb-2 toggle-amount" data-value="Rs {{!empty($expensesSummary) ? number_format(($salesSummary->total_sales - $salesSummary->total_overtime_payment - $expensesSummary->total_expenses), 2) : 0}}">Rs {{!empty($expensesSummary) ? number_format(($salesSummary->total_sales - $salesSummary->total_overtime_payment - $expensesSummary->total_expenses), 2) : 0}}</h3>
+                        <div class="card-body d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="d-block mb-1">
+                                    <i class="menu-icon tf-icons bx bx-money text-success"></i> Amount Received
+                                </span>
+                                <h3 class="card-title text-nowrap mb-2 toggle-amount" data-value="Rs {{!empty($expensesSummary) ? number_format(($salesSummary->total_sales - $salesSummary->total_overtime_payment - $expensesSummary->total_expenses), 2) : 0}}">Rs {{!empty($expensesSummary) ? number_format(($salesSummary->total_sales - $salesSummary->total_overtime_payment - $expensesSummary->total_expenses), 2) : 0}}</h3>
+                                <br>
+                                <a href="#" class="btn btn-success rounded btn-xs">View More</a>
+                            </div>
+                            <!-- Scrollable text at right side -->
+                            <div style="padding: 5px; max-height:120px; overflow-y:auto; font-size:9px; margin-left:15px; white-space:nowrap; scrollbar-width: thin; scrollbar-color: #ccc transparent;">
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                    <div class="card">
+                        <div class="card-body d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="d-block mb-1">
+                                    <i class="menu-icon tf-icons bx bx-money text-danger"></i> Cash In Hand Received
+                                </span>
+                                @php
+                                    $dateRange = request('date_range');
+                                    $query = \App\Models\AmountTransaction::query();
+                                    if ($dateRange) {
+                                        [$start, $end] = explode(' - ', $dateRange);
+                                        $start = \Carbon\Carbon::parse($start)->startOfDay();
+                                        $end   = \Carbon\Carbon::parse($end)->endOfDay();
+                                        $daysDiff = $start->diffInDays($end) + 1;
+                                    } else {
+                                        $start = \Carbon\Carbon::parse(now())->startOfDay();
+                                        $end = now()->endOfDay();
+                                        $daysDiff = $start->diffInDays($end) + 1;
+                                    }
+                                    $totalCashInHandReceived = $query->where('received_by', 1)->whereBetween('created_at', [$start, $end])->sum('amount');
+                                @endphp
+                                <h3 class="card-title text-nowrap mb-2 toggle-amount" data-value="Rs {{!empty($expensesSummary) ? number_format(($totalCashInHandReceived), 2) : 0}}">Rs {{!empty($expensesSummary) ? number_format(($totalCashInHandReceived), 2) : 0}}</h3>
+                                <br>
+                                <a href="#" class="btn btn-success rounded btn-xs">View More</a>
+                            </div>
+                            <!-- Scrollable text at right side -->
+                            <div style="padding: 5px; max-height:120px; overflow-y:auto; font-size:9px; margin-left:15px; white-space:nowrap; scrollbar-width: thin; scrollbar-color: #ccc transparent;">
+                                @foreach ($dailyCashInHandReceived as $day)
+                                    <div>{{ \Carbon\Carbon::parse($day->amount_received_date)->format('d, M') }}) Rs {{ number_format($day->total_received) }}</div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -226,6 +298,7 @@
                                 <table class="table table-striped table-bordered table-hover w-100">
                                     <thead>
                                         <th>Date</th>
+                                        <th>Expense Type</th>
                                         <th>Expense Name</th>
                                         <th>Detail</th>
                                         <th>Amount</th>
@@ -234,7 +307,8 @@
                                         @foreach(\App\Models\Expense::orderBy('created_at', 'desc')->get() as $expense)
                                         <tr>
                                             <td>{{\Carbon\Carbon::parse($expense->created_at)->format('d M, Y')}}</td>
-                                            <td>{{$expense->name}}</td>
+                                            <td>{{ucfirst(str_replace('_', ' ', $expense->expense_type?->name))}}</td>
+                                            <td>{{$expense->expense_name?->name}}</td>
                                             <td>{{$expense->description}}</td>
                                             <td>{{$expense->amount}}</td>
                                         </tr>
@@ -248,7 +322,7 @@
                 <div class="col-md-6 mb-4">
                     <div class="card">
                         <div class="card-body">
-                        <h5 class="text-decoration-underline text-white bg-primary rounded p-2">Top 10 Returning Customers</h5>
+                        <h5 class="text-decoration-underline text-white bg-primary rounded p-2">Top 20 Returning Customers</h5>
                             <div class="table-responsive" style="height: 400px">
                                 <table class="table table-striped table-bordered table-hover w-100">
                                     <thead>
@@ -269,7 +343,7 @@
                                                     $q->where('service_count', '>', 0);
                                                 }], 'service_count')
                                                 ->orderByDesc('total_services')
-                                                ->take(10)
+                                                ->take(20)
                                                 ->get();
                                         @endphp
 
@@ -296,6 +370,34 @@
             </div>
         </div>
     </div>
+    <!-- Modal -->
+    <div class="modal fade" id="add-cih-amount" tabindex="-1" aria-labelledby="add-cih-amount-modal" aria-hidden="true">
+        <div class="modal-dialog modal-sm"> <!-- small modal -->
+            <div class="modal-content">
+                <form method="POST" action="{{ route('admin.payments.add_cash_in_hand') }}">
+                    @csrf
+                    <!-- Header -->
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="add-cih-amount-modal">Enter CIH Amount</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">Amount</label>
+                                <input type="number" class="form-control" id="amount" name="amount" placeholder="Enter amount" required>
+                            </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="modal-footer">
+                        <input type="submit" class="btn btn-primary" value="Submit">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 @endsection
@@ -303,6 +405,7 @@
 @section('_scripts')
 <script>
     $(document).ready(function() {
+        @if(Auth::user()->hasRole('manager'))
         $(".toggle-amount").each(function () {
             let originalValue = $(this).data("value");
             $(this).html(`* * * * * &nbsp;&nbsp;<i class="bx bx-show toggle-icon"></i>`);
@@ -328,6 +431,7 @@
                 h3.data("hidden", true);
             }
         });
+        @endif
     });
 </script>
 @endsection

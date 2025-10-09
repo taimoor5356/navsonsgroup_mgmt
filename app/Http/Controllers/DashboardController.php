@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AmountTransaction;
 use App\Models\Billing;
 use App\Models\Expense;
 use App\Models\Service;
@@ -35,6 +36,7 @@ class DashboardController extends Controller
             $data['salesSummary']       = $this->salesSummary($start, $end);
             $data['expensesSummary']    = $this->expensesSummary($start, $end);
             $data['dayWiseSale']    = $this->dayWiseSale($start, $end);
+            $data['dailyCashInHandReceived']    = $this->dailyCashInHandReceived($start, $end);
 
         } else {
             // default: today only
@@ -46,6 +48,7 @@ class DashboardController extends Controller
             $data['salesSummary']       = $this->salesSummary($startDay, $currentDay);
             $data['expensesSummary']    = $this->expensesSummary($startDay, $currentDay);
             $data['dayWiseSale']    = $this->dayWiseSale($startDay, $currentDay);
+            $data['dailyCashInHandReceived']    = $this->dailyCashInHandReceived($startDay, $currentDay);
         }
 
         $authUser = Auth::user();
@@ -77,7 +80,7 @@ class DashboardController extends Controller
 
     public function totalNoOfCustomers($startDate, $endDate = null) 
     {
-        $query = User::customer()->active();
+        $query = User::whereDate('created_at', '>=', $startDate)->whereDate('created_at', '<=', $endDate)->customer()->active();
         return $query->count();
     }
 
@@ -97,6 +100,23 @@ class DashboardController extends Controller
                 ->get();
     }
 
+    // Daily CIH Received
+    public function dailyCashInHandReceived()
+    {
+        $startDate = now()->startOfMonth()->format('Y-m-d 00:00:00');
+        $endDate   = now()->endOfDay()->format('Y-m-d H:i:s');
+
+        return AmountTransaction::selectRaw("
+                    DATE(created_at) as amount_received_date,
+                    COALESCE(SUM(amount), 0) as total_received
+                ")
+                ->where('received_by', 1)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->groupBy('amount_received_date')
+                ->orderBy('amount_received_date', 'desc')
+                ->get();
+    }
+
     // Sales / Payments / Discounts
     public function salesSummary($startDate, $endDate = null)
     {
@@ -104,7 +124,7 @@ class DashboardController extends Controller
             SUM(collected_amount) as total_sales,
             SUM(CASE WHEN payment_mode_id = 1 THEN (collected_amount) ELSE 0 END) as total_cash_received,
             SUM(CASE WHEN payment_mode_id != 1 THEN (collected_amount) ELSE 0 END) as total_online_payment_received,
-            SUM(CASE WHEN payment_mode_id = 1 THEN (overtime_amount) ELSE 0 END) as total_overtime_payment,
+            SUM(CASE WHEN overtime = 1 THEN (overtime_amount) ELSE 0 END) as total_overtime_payment,
             SUM(discount) as total_discounts
         ");
 

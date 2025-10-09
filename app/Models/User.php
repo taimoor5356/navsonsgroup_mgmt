@@ -98,6 +98,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserVehicle::class, 'user_id', 'id');
     }
+
+    public function services()
+    {
+        return $this->hasManyThrough(
+            Service::class,
+            UserVehicle::class,
+            'user_id',        // FK on user_vehicles
+            'user_vehicle_id',// FK on services
+            'id',             // PK on users
+            'id'              // PK on user_vehicles
+        );
+    }
     
     public function expenses()
     {

@@ -53,6 +53,11 @@
                     <button class="btn btn-xs btn-primary rounded refresh-table p-2"><i class="text-white" data-feather="refresh-cw"></i></button>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-2 col-sm-2 col-12">
+                    Today Sale: {{ number_format((\App\Models\Service::whereDate('created_at', \Carbon\Carbon::now())->where('payment_status', 1)->sum('collected_amount')), 2) }}
+                </div>
+            </div>
         </div>
         <div class="card-body p-2">
             <div class="table-responsive text-nowrap">
@@ -109,7 +114,7 @@
                         d.payment_status = $('#payment-status').val();
                     }
                 },
-                pageLength: 25,       // show 100 records
+                pageLength: 50,       // show 100 records
                 lengthChange: false,   // hide "Show X entries" dropdown
                 order: [], // 👈 important: disable client-side ordering
                 columns: [{

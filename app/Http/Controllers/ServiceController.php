@@ -472,7 +472,8 @@ class ServiceController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => false
+                'status' => false,
+                'msg' => $e->getMessage()
             ]);
         }
     }

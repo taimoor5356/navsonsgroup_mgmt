@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Expense extends Model
+class ExpenseName extends Model
 {
     use HasFactory;
 
@@ -14,10 +14,5 @@ class Expense extends Model
     public function expense_type()
     {
         return $this->belongsTo(ExpenseType::class, 'expense_type_id', 'id');
-    }
-
-    public function expense_name()
-    {
-        return $this->belongsTo(ExpenseName::class, 'expense_name_id', 'id');
     }
 }

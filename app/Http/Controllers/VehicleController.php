@@ -100,8 +100,17 @@ class VehicleController extends Controller
     public function searchVehicleByNumber(Request $request)
     {
         if(!empty($request->registration_number)){
-            $vehicleExists = UserVehicle::with('user.user_address', 'vehicle.brand')->where('registration_number', strtolower($request->registration_number))->first();
+            $vehicleExists = UserVehicle::with([
+                'user.user_address',
+                'vehicle.brand',
+                'services' => function($query) {
+                    $query->where('payment_status', 0)
+                        ->where('collected_amount', 0);
+                }
+            ])->where('registration_number', strtolower($request->registration_number))
+            ->first();
             if (isset($vehicleExists)) {
+                $pendingAmount = $vehicleExists->services->sum('charges');
                 $exists = Service::where('user_vehicle_id', $vehicleExists->id)
                     ->where('created_at', '>=', Carbon::now()->subDay())
                     ->exists();
@@ -117,12 +126,14 @@ class VehicleController extends Controller
                 }
                 $data = [
                     'status' => true,
-                    'data' => $vehicleExists
+                    'data' => $vehicleExists,
+                    'pending_amount' => $pendingAmount
                 ];
             } else {
                 $data = [
                     'status' => false,
-                    'data' => []
+                    'data' => [],
+                    'pending_amount' => 0
                 ];
             }
             return $data;

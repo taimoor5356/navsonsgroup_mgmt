@@ -55,7 +55,7 @@
     @endphp
     <div class="mb-3 col-md-6 col-12">
         <label class="form-label" for="vehicle-registration-number">Vehicle Registration Number</label>
-        <div class="input-group input-group-merge">
+        <div class="input-group input-group-merge mb-1">
             <!-- Left Icon -->
             <span id="vehicle-registration-number2" class="input-group-text">
                 <i class="bx bx-file"></i>
@@ -68,7 +68,7 @@
                 id="vehicle-registration-number" 
                 placeholder="Enter Vehicle Registration Number" 
                 aria-label="va-123" 
-                aria-describedby="vehicle-registration-number2">
+                aria-describedby="vehicle-registration-number2" required>
 
             <!-- Right Search Icon -->
             <a href="#" id="search-vehicle" class="input-group-text bg-primary">
@@ -76,6 +76,7 @@
                 <i class="bx bx-loader text-dark search-button loader-icon d-none"></i>
             </a>
         </div>
+        <small class="bg-danger text-white rounded p-1 pending-amount d-none">Pending Amount:</small>
     </div>
     <div class="mb-3 col-md-6 col-12 position-relative">
         <label class="form-label" for="vehicle-brand-name">Vehicle Brand Name</label>
@@ -86,7 +87,7 @@
                 class="form-control" 
                 id="vehicle-brand-name" 
                 placeholder="Enter Vehicle Brand Name" 
-                autocomplete="off" style="text-align: left;">
+                autocomplete="off" style="text-align: left;" required>
             <input type="hidden" id="vehicle-brand-id" name="vehicle_brand_id" value="{{ isset($record) ? $vehicleBrandId : '' }}">
         </div>
 
@@ -105,7 +106,7 @@
                 class="form-control" 
                 id="vehicle-name" 
                 placeholder="Enter Vehicle Name" 
-                autocomplete="off" style="text-align: left;">
+                autocomplete="off" style="text-align: left;" required>
             <input type="hidden" id="vehicle-id" name="vehicle_id" value="{{ isset($record) ? $vehicleId : '' }}">
         </div>
 
@@ -280,6 +281,13 @@
                         if ((response) && (response.status == true)) {
                             $('#vehicle-brand-name').val(response.data.vehicle.brand.name);
                             $('#vehicle-name').val(response.data.vehicle.name);
+                            if (response.pending_amount > 0) {
+                                $('.pending-amount').removeClass('d-none');
+                                $('.pending-amount').html('Pending Amount: '+response.pending_amount);
+                            } else {
+                                $('.pending-amount').addClass('d-none');
+                                $('.pending-amount').html('');
+                            }
                             
                             $('#vehicle-brand-id').val(response.data.vehicle.brand.id);
                             $('#vehicle-id').val(response.data.vehicle.id);
@@ -293,6 +301,14 @@
                         }
                         if ((response.status == false) && (response.msg == 'already_serviced')) {
                             alert(response.message);
+                            $('#vehicle-brand-name').prop('disabled', true);
+                            $('#vehicle-name').prop('disabled', true);
+                            
+                            $('#customer-address').prop('disabled', true);
+                            $('#customer-address-id').prop('disabled', true);
+
+                            $('#customer-name').prop('disabled', true);
+                            $('#customer-phone').prop('disabled', true);
                         }
                         $('.search-icon').removeClass('d-none');
                         $('.loader-icon').addClass('d-none');
