@@ -603,7 +603,7 @@
                             }
                             computeCharges();
 
-                            $('#customer-address').val(response.data.user.user_address ? response.data.user.user_address.name : '');
+                            $('#customer-address').val(response.data.user.user_address ? response.data.user.user_address.name : (response.data.user.address || ''));
                             $('#customer-address-id').val(response.data.user.user_address ? response.data.user.user_address.id : '');
 
                             $('#customer-name').val(response.data.user.name);

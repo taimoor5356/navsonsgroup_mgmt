@@ -44,6 +44,15 @@ Route::get('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/register', [AuthController::class, 'postRegister'])->name('post_register');
 Route::get('/logout', [AuthController::class, 'logout'])->name('postlogout');
 
+// PWA manifest — served as a view (not a static public/manifest.json) so icon/start_url
+// paths always resolve correctly even when the app is hosted under a subdirectory
+// (this instance's APP_URL is http://localhost/adminpanel/, not the domain root).
+Route::get('/manifest.json', function () {
+    return response()
+        ->view('pwa.manifest')
+        ->header('Content-Type', 'application/manifest+json');
+})->name('pwa.manifest');
+
 Route::post('search-vehicle', [VehicleController::class, 'searchVehicleByNumber'])->name('search_vehicle_by_number');
 Route::post('search-vehicle-by-name', [VehicleController::class, 'searchVehicleByName'])->name('search_vehicle_by_name');
 Route::post('search-vehicle-by-brand-name', [VehicleController::class, 'searchVehicleByBrandName'])->name('search_vehicle_brand_by_name');
