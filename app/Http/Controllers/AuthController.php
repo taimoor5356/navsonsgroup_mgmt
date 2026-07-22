@@ -24,7 +24,7 @@ class AuthController extends Controller
             if (!empty($request->email) && !empty($request->password)) {
                 if (Auth::attempt(['email' => $request->email, 'password' => $request->password], $remember)) {
                     $authUser = Auth::user();
-                    if ((isset($authUser->role) && $authUser->role?->name == 'admin')) {
+                    if ((isset($authUser->role) && ($authUser->role?->name == 'admin' || $authUser->role?->name == 'manager'))) {
                         return redirect()->route('admin.dashboard');
                     } else if ((isset($authUser->role) && $authUser->role?->name == 'customer')) {
                         return redirect()->route('customer.dashboard');

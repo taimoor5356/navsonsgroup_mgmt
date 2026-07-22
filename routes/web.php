@@ -1,25 +1,27 @@
 <?php
 
-use App\Http\Controllers\AclController;
-use App\Http\Controllers\AmountTransactionController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BillingController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DetailedReportController;
-use App\Http\Controllers\ExpenseController;
-use App\Http\Controllers\ExpenseNameController;
-use App\Http\Controllers\FileController;
-use App\Http\Controllers\FineController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PreviousPaymentController;
-use App\Http\Controllers\ServiceController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\UserGroupController;
-use App\Http\Controllers\UserVehicleController;
-use App\Http\Controllers\VehicleController;
 use App\Models\AmountTransaction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AclController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FileController;
+use App\Http\Controllers\FineController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\BillingController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserGroupController;
+use App\Http\Controllers\ExpenseNameController;
+use App\Http\Controllers\PaymentModeController;
+use App\Http\Controllers\ServiceTypeController;
+use App\Http\Controllers\UserVehicleController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\DetailedReportController;
+use App\Http\Controllers\PreviousPaymentController;
+use App\Http\Controllers\AmountTransactionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -91,44 +93,71 @@ Route::group(['prefix' => '', 'middleware' => 'auth'], function () {
             Route::post('/update-payment-mode', [ServiceController::class, 'updatePaymentMode'])->name('admin.services.update_payment_mode');
             Route::post('/complaint', [ServiceController::class, 'complaint'])->name('admin.services.complaint');
             Route::post('/update-additional-services', [ServiceController::class, 'updateAdditionalServices'])->name('admin.services.update_additional_services');
+
+            // customer phone duplicate check (used by the add/edit service form)
+            Route::post('/check-phone', [ServiceController::class, 'checkPhoneDuplicate'])->name('admin.services.check_phone');
+
+            // service types / rates
+            Route::get('/types', [ServiceTypeController::class, 'index'])->name('admin.services.types.list');
+            Route::post('/types/update-price', [ServiceTypeController::class, 'updatePrice'])->name('admin.services.types.update_price')->middleware('role:admin|manager');
         });
-        //Expenses Routes
-        Route::group(['prefix' => '/expenses'], function () {
-            Route::get('/list', [ExpenseController::class, 'index'])->name('admin.expenses.list');
-            Route::get('/create', [ExpenseController::class, 'create'])->name('admin.expenses.create');
-            Route::post('/store', [ExpenseController::class, 'store'])->name('admin.expenses.store')->middleware('role:admin|manager');
-            Route::get('/edit/{id}', [ExpenseController::class, 'edit'])->name('admin.expenses.edit');
-            Route::post('/update/{id}', [ExpenseController::class, 'update'])->name('admin.expenses.update')->middleware('role:admin');
-            Route::post('/delete', [ExpenseController::class, 'destroy'])->name('admin.expenses.destroy')->middleware('role:admin');
 
-            Route::post('/delete-multiple-expenses', [ExpenseController::class, 'deleteMultipleexpenses'])->name('delete_multiple_expenses')->middleware('role:admin');
-            Route::get('/trashed', [ExpenseController::class, 'trashed'])->name('admin.expenses.trashed');
-            Route::get('/restore/{id}', [ExpenseController::class, 'restore'])->name('admin.expenses.restore')->middleware('role:admin');
-            Route::post('/export', [ExpenseController::class, 'export'])->name('admin.expenses.export');
+        //Accounts Routes
+        Route::group(['prefix' => '/accounts'], function () {
 
-            // Expense Names
-            Route::get('/expense-names/list', [ExpenseNameController::class, 'index'])->name('admin.expense_name.list');
-            Route::get('/expense-names/create', [ExpenseNameController::class, 'create'])->name('admin.expense_name.create');
-            Route::post('/expense-names/store', [ExpenseNameController::class, 'store'])->name('admin.expense_name.store')->middleware('role:admin|manager');
-            Route::get('/expense-names/edit/{id}', [ExpenseNameController::class, 'edit'])->name('admin.expense_name.edit');
-            Route::post('/expense-names/update/{id}', [ExpenseNameController::class, 'update'])->name('admin.expense_name.update')->middleware('role:admin');
-            Route::post('/expense-names/delete', [ExpenseNameController::class, 'destroy'])->name('admin.expense_name.destroy')->middleware('role:admin');
+            //Expenses Routes
+            Route::group(['prefix' => '/expenses'], function () {
+                Route::get('/list', [ExpenseController::class, 'index'])->name('admin.expenses.list');
+                Route::get('/create', [ExpenseController::class, 'create'])->name('admin.expenses.create');
+                Route::post('/store', [ExpenseController::class, 'store'])->name('admin.expenses.store')->middleware('role:admin|manager');
+                Route::get('/edit/{id}', [ExpenseController::class, 'edit'])->name('admin.expenses.edit');
+                Route::post('/update/{id}', [ExpenseController::class, 'update'])->name('admin.expenses.update')->middleware('role:admin');
+                Route::post('/delete', [ExpenseController::class, 'destroy'])->name('admin.expenses.destroy')->middleware('role:admin');
 
-            Route::post('/fetch-expense-names', [ExpenseNameController::class, 'fetchExpenseNames'])->name('fetch_expense_names');
-        });
-        //Fines Routes
-        Route::group(['prefix' => '/fines'], function () {
-            Route::get('/list', [FineController::class, 'index'])->name('admin.fines.list');
-            Route::get('/create', [FineController::class, 'create'])->name('admin.fines.create');
-            Route::post('/store', [FineController::class, 'store'])->name('admin.fines.store')->middleware('role:admin|manager');
-            Route::get('/edit/{id}', [FineController::class, 'edit'])->name('admin.fines.edit');
-            Route::post('/update/{id}', [FineController::class, 'update'])->name('admin.fines.update')->middleware('role:admin');
-            Route::post('/delete', [FineController::class, 'destroy'])->name('admin.fines.destroy')->middleware('role:admin');
+                Route::post('/delete-multiple-expenses', [ExpenseController::class, 'deleteMultipleexpenses'])->name('delete_multiple_expenses')->middleware('role:admin');
+                Route::get('/trashed', [ExpenseController::class, 'trashed'])->name('admin.expenses.trashed');
+                Route::get('/restore/{id}', [ExpenseController::class, 'restore'])->name('admin.expenses.restore')->middleware('role:admin');
+                Route::post('/export', [ExpenseController::class, 'export'])->name('admin.expenses.export');
 
-            Route::post('/delete-multiple-fines', [FineController::class, 'deleteMultiplefines'])->name('delete_multiple_fines')->middleware('role:admin');
-            Route::get('/trashed', [FineController::class, 'trashed'])->name('admin.fines.trashed');
-            Route::get('/restore/{id}', [FineController::class, 'restore'])->name('admin.fines.restore')->middleware('role:admin');
-            Route::post('/export', [FineController::class, 'export'])->name('admin.fines.export');
+                // Expense Names
+                Route::get('/expense-names/list', [ExpenseNameController::class, 'index'])->name('admin.expense_name.list');
+                Route::get('/expense-names/create', [ExpenseNameController::class, 'create'])->name('admin.expense_name.create');
+                Route::post('/expense-names/store', [ExpenseNameController::class, 'store'])->name('admin.expense_name.store')->middleware('role:admin|manager');
+                Route::get('/expense-names/edit/{id}', [ExpenseNameController::class, 'edit'])->name('admin.expense_name.edit');
+                Route::post('/expense-names/update/{id}', [ExpenseNameController::class, 'update'])->name('admin.expense_name.update')->middleware('role:admin');
+                Route::post('/expense-names/delete', [ExpenseNameController::class, 'destroy'])->name('admin.expense_name.destroy')->middleware('role:admin');
+
+                Route::post('/fetch-expense-names', [ExpenseNameController::class, 'fetchExpenseNames'])->name('fetch_expense_names');
+            });
+
+            //Fines Routes
+            Route::group(['prefix' => '/fines'], function () {
+                Route::get('/list', [FineController::class, 'index'])->name('admin.fines.list');
+                Route::get('/create', [FineController::class, 'create'])->name('admin.fines.create');
+                Route::post('/store', [FineController::class, 'store'])->name('admin.fines.store')->middleware('role:admin|manager');
+                Route::get('/edit/{id}', [FineController::class, 'edit'])->name('admin.fines.edit');
+                Route::post('/update/{id}', [FineController::class, 'update'])->name('admin.fines.update')->middleware('role:admin');
+                Route::post('/delete', [FineController::class, 'destroy'])->name('admin.fines.destroy')->middleware('role:admin');
+
+                Route::post('/delete-multiple-fines', [FineController::class, 'deleteMultiplefines'])->name('delete_multiple_fines')->middleware('role:admin');
+                Route::get('/trashed', [FineController::class, 'trashed'])->name('admin.fines.trashed');
+                Route::get('/restore/{id}', [FineController::class, 'restore'])->name('admin.fines.restore')->middleware('role:admin');
+                Route::post('/export', [FineController::class, 'export'])->name('admin.fines.export');
+            });
+
+            //Payment Types Routes
+            Route::group(['prefix' => '/payment-modes'], function () {
+                Route::get('/list', [PaymentModeController::class, 'index'])->name('admin.payment_modes.list');
+                Route::get('/create', [PaymentModeController::class, 'create'])->name('admin.payment_modes.create');
+                Route::post('/store', [PaymentModeController::class, 'store'])->name('admin.payment_modes.store')->middleware('role:admin|manager');
+                Route::get('/edit/{id}', [PaymentModeController::class, 'edit'])->name('admin.payment_modes.edit');
+                Route::post('/update/{id}', [PaymentModeController::class, 'update'])->name('admin.payment_modes.update')->middleware('role:admin');
+                Route::post('/delete', [PaymentModeController::class, 'destroy'])->name('admin.payment_modes.destroy')->middleware('role:admin');
+
+                Route::get('/trashed', [PaymentModeController::class, 'trashed'])->name('admin.payment_modes.trashed');
+                Route::get('/restore/{id}', [PaymentModeController::class, 'restore'])->name('admin.payment_modes.restore')->middleware('role:admin');
+                Route::post('/export', [PaymentModeController::class, 'export'])->name('admin.payment_modes.export');
+            });
         });
         //ACL Routes
         Route::group(['prefix' => '/acl'], function () {

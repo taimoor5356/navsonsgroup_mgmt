@@ -5,14 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ServiceType extends Model
+class VehicleCategory extends Model
 {
     use HasFactory;
 
     protected $guarded = ['id'];
-
-    public function category_rates()
-    {
-        return $this->hasMany(ServiceCategoryRate::class, 'service_type_id', 'id');
-    }
 }

@@ -18,16 +18,17 @@ class AclSeeder extends Seeder
      */
     public function run(): void
     {
-        //
         $namespace = 'App\\Models';
         $modelsPath = app_path('Models');
         $modelFiles = File::files($modelsPath);
 
-        foreach ($modelFiles as $mfkey => $modelFile) {
+        // Create Permission Modules dynamically
+        foreach ($modelFiles as $modelFile) {
             $fileName = pathinfo($modelFile, PATHINFO_FILENAME);
-            $className = $namespace.'\\'.$fileName;
+            $className = $namespace . '\\' . $fileName;
             $camelCaseString = $fileName;
             $wordsWithSpaces = $this->camelCaseToWords($camelCaseString);
+
             if (class_exists($className)) {
                 if (!PermissionModule::where('name', $wordsWithSpaces)->exists()) {
                     PermissionModule::create([
@@ -37,51 +38,79 @@ class AclSeeder extends Seeder
             }
         }
 
+        // Create permissions for each module
         $permissionModules = PermissionModule::get();
-        $permission = [
-            'view',
-            'create',
-            'update',
-            'delete'
-        ];
-        foreach ($permissionModules as $pmkey => $permissionModule) {
-            for ($i = 0; $i < 4; $i++) {
-                if (!Permission::where('name', $permissionModule->name.'_'.$permission[$i])->exists()) {
+        $permissionActions = ['view', 'create', 'update', 'delete'];
+
+        foreach ($permissionModules as $permissionModule) {
+            foreach ($permissionActions as $action) {
+                $permissionName = strtolower($permissionModule->name . '_' . $action);
+                if (!Permission::where('name', $permissionName)->exists()) {
                     Permission::create([
                         'module_id' => $permissionModule->id,
-                        'name' => strtolower($permissionModule->name.'_'.$permission[$i]),
+                        'name' => $permissionName,
                         'guard_name' => 'web'
                     ]);
                 }
             }
         }
-        $user = User::find(1);
+
         $permissions = Permission::get();
-        if (isset($user)) {
-            $role = Role::updateOrCreate([
-                'name' => 'admin',
-                'guard_name' => 'web'
-            ]);
-            $user->assignRole($role);
-            $role->syncPermissions($permissions);
-        } else {
+
+        // Filter permissions for each role
+        $managerPermissions = $permissions->filter(function ($perm) {
+            return str_contains($perm->name, '_view') || str_contains($perm->name, '_create');
+        });
+
+        $userPermissions = $permissions->filter(function ($perm) {
+            return str_contains($perm->name, '_view');
+        });
+
+        // Create Admin (All permissions)
+        $this->createUserWithRole('Admin', 'admin@navsonsgroup.com', '12345678', 'admin', $permissions, 1);
+
+        // Create Manager (View + Create only)
+        $this->createUserWithRole('Manager', 'manager@navsonsgroup.com', '12345678', 'manager', $managerPermissions, 2);
+
+        // Create Normal User (View only)
+        $this->createUserWithRole('User', 'user@navsonsgroup.com', '12345678', 'user', $userPermissions, 3);
+    }
+
+    /**
+     * Convert camelCase to snake_case
+     */
+    function camelCaseToWords($input)
+    {
+        return preg_replace('/(?<=\\w)(?=[A-Z])/', '_', $input);
+    }
+
+    /**
+     * Helper to create user and assign role
+     */
+    function createUserWithRole($name, $email, $password, $roleName, $permissions = null, $userType = 2)
+    {
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
             $user = new User();
-            $user->name = 'Admin';
-            $user->email = 'admin@navsons.com';
-            $user->password =  Hash::make('12345678');
-            $user->user_type = 1;
-            $role = Role::updateOrCreate([
-                'name' => 'admin',
-                'guard_name' => 'web'
-            ]);
+            $user->name = $name;
+            $user->email = $email;
+            $user->password = Hash::make($password);
+            $user->user_type = $userType;
             $user->save();
-            $user->assignRole($role);
+        }
+
+        $role = Role::updateOrCreate([
+            'name' => $roleName,
+            'guard_name' => 'web'
+        ]);
+
+        $user->assignRole($role);
+
+        if ($permissions) {
             $role->syncPermissions($permissions);
         }
 
-    }
-    function camelCaseToWords($input) {
-        $output = preg_replace('/(?<=\\w)(?=[A-Z])/', '_', $input);
-        return $output;
+        return $user;
     }
 }

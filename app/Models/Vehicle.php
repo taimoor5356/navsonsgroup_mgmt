@@ -12,12 +12,12 @@ class Vehicle extends Model
 
     protected $guarded = ['id'];
 
-    public function user() {
-        return $this->belongsTo(User::class, 'user_id', 'id');
-    }
-
     public function brand() {
         return $this->belongsTo(VehicleBrand::class, 'vehicle_brand_id', 'id');
+    }
+
+    public function category() {
+        return $this->belongsTo(VehicleCategory::class, 'vehicle_category_id', 'id');
     }
 
     public function services() {

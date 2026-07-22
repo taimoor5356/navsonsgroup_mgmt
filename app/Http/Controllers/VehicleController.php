@@ -146,7 +146,7 @@ class VehicleController extends Controller
             $q = $request->get('q');
                 $vehicles = Vehicle::where('vehicle_brand_id', $request->vehicle_brand_id)->where('name', 'LIKE', "%{$q}%")
                                 ->limit(10)
-                                ->get(['id','name']);
+                                ->get(['id','name','vehicle_category_id']);
             if (!empty($vehicles)) {
                 $data = [
                     'status' => true,

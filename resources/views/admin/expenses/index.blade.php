@@ -59,7 +59,7 @@ $(document).ready(function() {
             serverSide: true,
             scrollX: true,
             ajax: {
-                url: "{{url('admin/expenses/list')}}",
+                url: "{{url('admin/accounts/expenses/list')}}",
             },
             pageLength: 10,       // show 10 records
             lengthChange: false,   // hide "Show X entries" dropdown

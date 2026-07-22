@@ -35,7 +35,8 @@
     @include('_messages')
     <div class="row">
         <div class="col-xl">
-            <form method="POST" action="{{url('admin/services/update', [$record->id])}}">
+            <div id="form-alert-container"></div>
+            <form method="POST" action="{{url('admin/services/update', [$record->id])}}" id="service-form" data-mode="edit" enctype="multipart/form-data">
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">{{$header_title}}</h5>
