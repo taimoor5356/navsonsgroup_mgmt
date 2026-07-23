@@ -101,7 +101,7 @@
             }
         }
     @endphp
-    <input type="hidden" id="current-user-id" value="{{ $currentUserId }}">
+    <input type="hidden" id="current-user-id" name="current_user_id" value="{{ $currentUserId }}">
     <div class="col-12">
         <h6 class="form-section-title">Vehicle Details</h6>
     </div>
@@ -241,13 +241,26 @@
         </div>
     </div>
     <div class="mb-3 col-md-6 col-12">
-        <label class="form-label" for="discount-value">Discount</label>
+        <label class="form-label" for="discount-value-percent">Discount</label>
+        @php
+            $fixedDiscounts = [10, 20, 25, 30, 35, 40, 45, 50];
+            $isPercentDiscount = isset($record) && $discountType === 'percent';
+            $selectedDiscountPercent = ($isPercentDiscount && in_array((int) $discountValue, $fixedDiscounts))
+                ? (int) $discountValue
+                : 0;
+        @endphp
         <div class="input-group input-group-merge">
             <select name="discount_type" id="discount-type" class="form-control hidden-input" style="max-width: 100px; flex: 0 0 100px;">
                 <option value="amount" {{ old('discount_type', isset($record) ? $discountType : 'amount') == 'amount' ? 'selected' : '' }}>Rs.</option>
                 <option value="percent" {{ old('discount_type', isset($record) ? $discountType : 'amount') == 'percent' ? 'selected' : '' }}>%</option>
             </select>
-            <input type="number" step="0.01" min="0" name="discount_value" value="{{ old('discount_value', isset($record) ? $discountValue : '') }}" id="discount-value" class="form-control hidden-input" placeholder="Enter Discount Value" aria-label="100">
+            <select name="discount_value" id="discount-value-percent" class="form-control hidden-input {{ old('discount_type', isset($record) ? $discountType : 'amount') == 'percent' ? '' : 'd-none' }}">
+                <option value="0" {{ old('discount_value', isset($record) ? $selectedDiscountPercent : 0) == 0 ? 'selected' : '' }}>No Discount</option>
+                @foreach ($fixedDiscounts as $percent)
+                    <option value="{{ $percent }}" {{ old('discount_value', isset($record) ? $selectedDiscountPercent : 0) == $percent ? 'selected' : '' }}>{{ $percent }}%</option>
+                @endforeach
+            </select>
+            <input type="number" step="0.01" min="0" name="discount_value" value="{{ old('discount_value', isset($record) && !$isPercentDiscount ? $discountValue : '') }}" id="discount-value-amount" class="form-control hidden-input {{ old('discount_type', isset($record) ? $discountType : 'amount') == 'percent' ? 'd-none' : '' }}" placeholder="Enter Discount Amount" aria-label="100">
         </div>
     </div>
     <div class="mb-3 col-md-6 col-12">
@@ -424,16 +437,34 @@
             computeDiscount();
         }
 
+        // Only one of the two discount_value inputs should ever submit: the select
+        // (fixed percentages) when type=percent, or the free-text amount otherwise.
+        // Toggling `disabled` (not just visibility) keeps the inactive one out of
+        // the FormData entirely, so there's never a duplicate `discount_value` key.
+        function toggleDiscountInputs() {
+            var type = $('#discount-type').val();
+            if (type === 'percent') {
+                $('#discount-value-percent').removeClass('d-none').prop('disabled', false);
+                $('#discount-value-amount').addClass('d-none').prop('disabled', true);
+            } else {
+                $('#discount-value-amount').removeClass('d-none').prop('disabled', false);
+                $('#discount-value-percent').addClass('d-none').prop('disabled', true);
+            }
+        }
+
         function computeDiscount() {
             var charges = parseFloat($('#charges').val()) || 0;
             var type = $('#discount-type').val();
-            var value = parseFloat($('#discount-value').val()) || 0;
+            var value = type === 'percent'
+                ? (parseFloat($('#discount-value-percent').val()) || 0)
+                : (parseFloat($('#discount-value-amount').val()) || 0);
             var discount = type === 'percent' ? (charges * value / 100) : value;
             discount = clamp(discount, 0, charges);
             $('#discount-amount').val(discount.toFixed(2));
             $('#total-bill').val((charges - discount).toFixed(2));
         }
 
+        toggleDiscountInputs();
         computeCharges();
 
         function getForm() {
@@ -503,6 +534,7 @@
                         $('#allow-duplicate-phone-wrapper').addClass('d-none');
                         $('#phone-duplicate-warning').addClass('d-none');
                         $('.existing-pic-preview').remove();
+                        toggleDiscountInputs();
                         computeCharges();
                     }
                 },
@@ -515,7 +547,12 @@
         });
 
         $(document).on('change', '#service_type, #vehicle-category, #diesel-checkbox, #polish-checkbox', computeCharges);
-        $(document).on('input change', '#discount-type, #discount-value', computeDiscount);
+        $(document).on('change', '#discount-type', function() {
+            toggleDiscountInputs();
+            computeDiscount();
+        });
+        $(document).on('change', '#discount-value-percent', computeDiscount);
+        $(document).on('input change', '#discount-value-amount', computeDiscount);
 
         function getSubmitButton() {
             return $('#customer-phone').closest('form').find('button[type="submit"]');
@@ -620,15 +657,12 @@
                         }
                         $('.hidden-input').attr('readonly', false);
                         if ((response.status == false) && (response.msg == 'already_serviced')) {
+                            // Just a heads-up (e.g. a legitimate second visit same day) —
+                            // do NOT disable fields here: disabled inputs are dropped entirely
+                            // from the FormData submission, which previously made a real
+                            // resubmission fail with several unrelated "field is required"
+                            // errors once this warning had fired.
                             alert(response.message);
-                            $('#vehicle-brand-name').prop('disabled', true);
-                            $('#vehicle-name').prop('disabled', true);
-
-                            $('#customer-address').prop('disabled', true);
-                            $('#customer-address-id').prop('disabled', true);
-
-                            $('#customer-name').prop('disabled', true);
-                            $('#customer-phone').prop('disabled', true);
                         }
                         $('.search-icon').removeClass('d-none');
                         $('.loader-icon').addClass('d-none');

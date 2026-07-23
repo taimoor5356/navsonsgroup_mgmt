@@ -21,4 +21,9 @@ class Fine extends Model
     {
         return $this->belongsTo(Vehicle::class, 'vehicle_id', 'id');
     }
+
+    public function user_vehicle()
+    {
+        return $this->belongsTo(UserVehicle::class, 'user_vehicle_id', 'id');
+    }
 }

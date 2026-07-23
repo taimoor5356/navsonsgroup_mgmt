@@ -9,6 +9,8 @@ class ExpenseType extends Model
 {
     use HasFactory;
 
+    protected $guarded = ['id'];
+
     public function expenses() {
         return $this->hasMany(Expense::class, 'expense_type_id', 'id');
     }

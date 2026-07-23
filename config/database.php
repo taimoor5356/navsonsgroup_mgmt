@@ -63,6 +63,24 @@ return [
             ]) : [],
         ],
 
+        // Read-only source connection for the one-off legacy data migration
+        // (see App\Console\Commands\MigrateLegacyData). Points at a separate
+        // database restored from database/old_db.sql — never the live app data.
+        'mysql_old' => [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_OLD_DATABASE', 'navsonsgroup_mgmt_old'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),

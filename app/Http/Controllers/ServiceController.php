@@ -244,7 +244,7 @@ class ServiceController extends Controller
             'customer_phone'              => ['required', 'digits:11', Closure::fromCallable([$this, 'validatePhoneNotFake'])],
             'customer_address'            => 'required|string',
             'discount_type'               => 'required|in:amount,percent',
-            'discount_value'              => 'nullable|numeric|min:0',
+            'discount_value'              => ['nullable', $this->discountValueRule($request)],
             'date'                        => 'required|date',
             'color'                       => 'nullable|string|max:32',
             'model_year'                  => 'nullable|string|max:8',
@@ -257,7 +257,12 @@ class ServiceController extends Controller
         ]);
 
         $phone = preg_replace('/\D/', '', $request->customer_phone);
-        $duplicateUser = User::where('phone', $phone)->first();
+        // If the registration-number search already matched an existing customer,
+        // their own phone number legitimately "already exists" — exclude them from
+        // the duplicate check instead of blocking a new service for their own record.
+        $duplicateUser = User::where('phone', $phone)
+            ->when($request->current_user_id, fn ($q) => $q->where('id', '!=', $request->current_user_id))
+            ->first();
 
         if ($duplicateUser && !$request->boolean('allow_duplicate_phone')) {
             $message = 'This phone number is already registered to "' . $duplicateUser->name . '". Check "Allow anyway" to proceed if this is correct.';
@@ -282,36 +287,58 @@ class ServiceController extends Controller
             // ========================
             // Step 1: Handle Vehicle Brand
             // ========================
+            // vehicle_brand_id/vehicle_id are hidden fields set by autofill (registration
+            // search or the brand/model autocomplete). If staff then corrects a typo in the
+            // visible text (e.g. autofill showed "toyta", they fix it to "Toyota") while that
+            // hidden id stays the same, propagate the correction onto the shared catalog row
+            // instead of silently keeping the old, wrong name — this is master data shared by
+            // every customer with that brand/model, not something specific to this service.
             $vehicleBrandId = $request->vehicle_brand_id;
-            if (!$vehicleBrandId && !empty($request->vehicle_brand_name)) {
-                $brand = VehicleBrand::firstOrCreate(
-                    ['name' => strtolower($request->vehicle_brand_name)]
-                );
+            $submittedBrandName = !empty($request->vehicle_brand_name) ? strtolower(trim($request->vehicle_brand_name)) : null;
+            if ($vehicleBrandId) {
+                $brandRow = VehicleBrand::find($vehicleBrandId);
+                if ($brandRow && $submittedBrandName && $brandRow->name !== $submittedBrandName) {
+                    $brandRow->name = $submittedBrandName;
+                    $brandRow->save();
+                }
+            } elseif ($submittedBrandName) {
+                $brand = VehicleBrand::firstOrCreate(['name' => $submittedBrandName]);
                 $vehicleBrandId = $brand->id;
             }
 
             // ========================
-            // Step 2: Handle Vehicle
+            // Step 2: Handle Vehicle (same correction-propagation logic as the brand above)
             // ========================
             $vehicleId = $request->vehicle_id;
-            if (!$vehicleId && !empty($request->vehicle_name)) {
-                $vehicleModel = Vehicle::firstOrCreate(
-                    ['name' => strtolower($request->vehicle_name)],
-                    [
-                        'vehicle_brand_id' => $vehicleBrandId,
-                        'vehicle_category_id' => $request->vehicle_category_id,
-                    ]
+            $submittedVehicleName = !empty($request->vehicle_name) ? strtolower(trim($request->vehicle_name)) : null;
+            if ($vehicleId) {
+                $vehicleCatalogRow = Vehicle::find($vehicleId);
+                if ($vehicleCatalogRow) {
+                    $dirty = false;
+                    if ($submittedVehicleName && $vehicleCatalogRow->name !== $submittedVehicleName) {
+                        $vehicleCatalogRow->name = $submittedVehicleName;
+                        $dirty = true;
+                    }
+                    if ($vehicleBrandId && $vehicleCatalogRow->vehicle_brand_id != $vehicleBrandId) {
+                        $vehicleCatalogRow->vehicle_brand_id = $vehicleBrandId;
+                        $dirty = true;
+                    }
+                    if ($request->vehicle_category_id && $vehicleCatalogRow->vehicle_category_id != $request->vehicle_category_id) {
+                        $vehicleCatalogRow->vehicle_category_id = $request->vehicle_category_id;
+                        $dirty = true;
+                    }
+                    if ($dirty) {
+                        $vehicleCatalogRow->save();
+                    }
+                }
+            } elseif ($submittedVehicleName) {
+                $vehicleCatalogRow = Vehicle::firstOrCreate(
+                    ['name' => $submittedVehicleName],
+                    ['vehicle_brand_id' => $vehicleBrandId, 'vehicle_category_id' => $request->vehicle_category_id]
                 );
-                $vehicleId = $vehicleModel->id;
+                $vehicleId = $vehicleCatalogRow->id;
             }
 
-            // Category lives on the vehicle catalog row, not the client request — a legacy
-            // row created before this feature may still be missing one, so backfill it.
-            $vehicleCatalogRow = Vehicle::find($vehicleId);
-            if ($vehicleCatalogRow && !$vehicleCatalogRow->vehicle_category_id && $request->vehicle_category_id) {
-                $vehicleCatalogRow->vehicle_category_id = $request->vehicle_category_id;
-                $vehicleCatalogRow->save();
-            }
             $categoryId = $vehicleCatalogRow->vehicle_category_id ?? $request->vehicle_category_id;
 
             if (isset($userRegisteredVehicle)) {
@@ -334,6 +361,15 @@ class ServiceController extends Controller
                 }
 
                 $user->assignRole('customer');
+
+                // Propagate corrections to the shared customer record (name/phone/address),
+                // same reasoning as the vehicle brand/model sync above — explicitly excludes
+                // pricing, which stays freshly computed per-service.
+                $user->name = strtolower($request->customer_name);
+                $user->phone = $phone;
+                $user->address = strtolower($request->customer_address);
+                $user->user_address_id = $request->customer_address_id ?: $user->user_address_id;
+                $user->save();
 
                 $userRegisteredVehicle->service_count = $userRegisteredVehicle->service_count + 1;
                 $userRegisteredVehicle->vehicle_id = $vehicleId; // ensure correct vehicle_id assigned
@@ -362,6 +398,14 @@ class ServiceController extends Controller
 
                 $user->assignRole('customer');
 
+                if ($duplicateUser) {
+                    $user->name = strtolower($request->customer_name);
+                    $user->phone = $phone;
+                    $user->address = strtolower($request->customer_address);
+                    $user->user_address_id = $request->customer_address_id ?: $user->user_address_id;
+                    $user->save();
+                }
+
                 $vehicle = UserVehicle::create([
                     'user_id'             => $user->id,
                     'vehicle_id'          => $vehicleId,
@@ -389,9 +433,11 @@ class ServiceController extends Controller
                 + ($request->filled('diesel') ? (float) ($addonRates['diesel']->price ?? 0) : 0)
                 + ($request->filled('polish') ? (float) ($addonRates['polish']->price ?? 0) : 0);
 
+            // discount_type decides how discount_value is interpreted: a fixed percentage
+            // (validated against the preset list) or a direct Rs. amount.
             $discountValue = (float) ($request->discount_value ?? 0);
             $discount = $request->discount_type === 'percent'
-                ? round($charges * $discountValue / 100)
+                ? round($charges * $discountValue / 100, 2)
                 : $discountValue;
             $discount = max(0, min($discount, $charges));
 
@@ -477,7 +523,7 @@ class ServiceController extends Controller
             'customer_phone'              => ['required', 'digits:11', Closure::fromCallable([$this, 'validatePhoneNotFake'])],
             'customer_address'            => 'required|string',
             'discount_type'               => 'required|in:amount,percent',
-            'discount_value'              => 'nullable|numeric|min:0',
+            'discount_value'              => ['nullable', $this->discountValueRule($request)],
             'date'                        => 'required|date',
             'color'                       => 'nullable|string|max:32',
             'model_year'                  => 'nullable|string|max:8',
@@ -522,24 +568,44 @@ class ServiceController extends Controller
 
             // Resolve the vehicle brand/model catalog rows first — charges now depend on
             // the vehicle's category, so this must happen before the money computation.
+            // As in store(), if the hidden id is already set but staff corrected the visible
+            // text (typo fix), propagate that correction onto the shared catalog row rather
+            // than silently discarding it.
+            $submittedBrandName = !empty($request->vehicle_brand_name) ? strtolower(trim($request->vehicle_brand_name)) : null;
             $vehicleBrandData = VehicleBrand::find($request->vehicle_brand_id);
-            if (!$vehicleBrandData) {
-                $vehicleBrandData = VehicleBrand::firstOrCreate(['name' => strtolower($request->vehicle_brand_name)]);
+            if ($vehicleBrandData) {
+                if ($submittedBrandName && $vehicleBrandData->name !== $submittedBrandName) {
+                    $vehicleBrandData->name = $submittedBrandName;
+                    $vehicleBrandData->save();
+                }
+            } else {
+                $vehicleBrandData = VehicleBrand::firstOrCreate(['name' => $submittedBrandName]);
             }
 
+            $submittedVehicleName = !empty($request->vehicle_name) ? strtolower(trim($request->vehicle_name)) : null;
             $vehicleData = Vehicle::find($request->vehicle_id);
-            if (!$vehicleData) {
+            if ($vehicleData) {
+                $dirty = false;
+                if ($submittedVehicleName && $vehicleData->name !== $submittedVehicleName) {
+                    $vehicleData->name = $submittedVehicleName;
+                    $dirty = true;
+                }
+                if ($vehicleBrandData->id && $vehicleData->vehicle_brand_id != $vehicleBrandData->id) {
+                    $vehicleData->vehicle_brand_id = $vehicleBrandData->id;
+                    $dirty = true;
+                }
+                if ($request->vehicle_category_id && $vehicleData->vehicle_category_id != $request->vehicle_category_id) {
+                    $vehicleData->vehicle_category_id = $request->vehicle_category_id;
+                    $dirty = true;
+                }
+                if ($dirty) {
+                    $vehicleData->save();
+                }
+            } else {
                 $vehicleData = Vehicle::firstOrCreate(
-                    ['name' => strtolower($request->vehicle_name)],
+                    ['name' => $submittedVehicleName],
                     ['vehicle_brand_id' => $vehicleBrandData->id, 'vehicle_category_id' => $request->vehicle_category_id]
                 );
-            }
-
-            // Category lives on the vehicle catalog row, not the client request — a legacy
-            // row created before this feature may still be missing one, so backfill it.
-            if (!$vehicleData->vehicle_category_id && $request->vehicle_category_id) {
-                $vehicleData->vehicle_category_id = $request->vehicle_category_id;
-                $vehicleData->save();
             }
             $categoryId = $vehicleData->vehicle_category_id ?? $request->vehicle_category_id;
 
@@ -553,9 +619,11 @@ class ServiceController extends Controller
                 + ($request->filled('diesel') ? (float) ($addonRates['diesel']->price ?? 0) : 0)
                 + ($request->filled('polish') ? (float) ($addonRates['polish']->price ?? 0) : 0);
 
+            // discount_type decides how discount_value is interpreted: a fixed percentage
+            // (validated against the preset list) or a direct Rs. amount.
             $discountValue = (float) ($request->discount_value ?? 0);
             $discount = $request->discount_type === 'percent'
-                ? round($charges * $discountValue / 100)
+                ? round($charges * $discountValue / 100, 2)
                 : $discountValue;
             $discount = max(0, min($discount, $charges));
 
@@ -770,6 +838,26 @@ class ServiceController extends Controller
         }
 
         return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * discount_value means different things depending on discount_type: a fixed
+     * percentage (must be one of the preset options) or a free-form Rs. amount.
+     */
+    private function discountValueRule(Request $request)
+    {
+        return function ($attribute, $value, $fail) use ($request) {
+            if ($value === null || $value === '') {
+                return;
+            }
+            if ($request->discount_type === 'percent') {
+                if (!in_array((int) $value, [0, 10, 20, 25, 30, 35, 40, 45, 50], true)) {
+                    $fail('The discount must be one of the fixed percentages (10, 20, 25, 30, 35, 40, 45, 50).');
+                }
+            } elseif (!is_numeric($value) || $value < 0) {
+                $fail('The discount amount must be a valid positive number.');
+            }
+        };
     }
 
     /**
