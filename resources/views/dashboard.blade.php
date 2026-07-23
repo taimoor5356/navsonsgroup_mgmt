@@ -304,7 +304,7 @@
                                         <th>Amount</th>
                                     </thead>
                                     <tbody>
-                                        @foreach(\App\Models\Expense::orderBy('created_at', 'desc')->get() as $expense)
+                                        @foreach(\App\Models\Expense::orderBy('created_at', 'desc')->take(30)->get() as $expense)
                                         <tr>
                                             <td>{{\Carbon\Carbon::parse($expense->created_at)->format('d M, Y')}}</td>
                                             <td>{{ucfirst(str_replace('_', ' ', $expense->expense_type?->name))}}</td>
