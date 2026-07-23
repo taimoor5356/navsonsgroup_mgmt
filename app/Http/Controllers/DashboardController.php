@@ -39,12 +39,14 @@ class DashboardController extends Controller
             $data['dailyCashInHandReceived']    = $this->dailyCashInHandReceived($start, $end);
 
         } else {
-            // default: today only
+            // No date filter applied: Total Vehicles Washed / Total Customers show
+            // all-time totals (not just the current month) — the other cards keep
+            // their current-month default.
             $startDay = Carbon::now()->startOfMonth()->format('Y-m-d');
             $currentDay = Carbon::now()->format('Y-m-d');
 
-            $data['totalWashedCars']    = $this->totalWashedCars($startDay, $currentDay);
-            $data['totalNoOfCustomers'] = $this->totalNoOfCustomers($startDay, $currentDay);
+            $data['totalWashedCars']    = $this->totalWashedCars();
+            $data['totalNoOfCustomers'] = $this->totalNoOfCustomers();
             $data['salesSummary']       = $this->salesSummary($startDay, $currentDay);
             $data['expensesSummary']    = $this->expensesSummary($startDay, $currentDay);
             $data['dayWiseSale']    = $this->dayWiseSale($startDay, $currentDay);
@@ -60,40 +62,50 @@ class DashboardController extends Controller
         }
     }
 
-    public function totalWashedCars($startDate, $endDate = null) 
+    public function totalWashedCars($startDate = null, $endDate = null)
     {
-        $query = Service::query();
+        $query = Service::query()->whereNull('deleted_at');
 
-        if ($endDate) {
+        if ($startDate && $endDate) {
             // Range filter
             $query->whereBetween('created_at', [
                 $startDate . ' 00:00:00',
                 $endDate . ' 23:59:59'
             ]);
-        } else {
+        } elseif ($startDate) {
             // Single day filter
             $query->whereDate('created_at', $startDate);
         }
+        // No dates at all: no filter applied, return all-time data.
 
         return $query->get();
     }
 
-    public function totalNoOfCustomers($startDate, $endDate = null) 
+    public function totalNoOfCustomers($startDate = null, $endDate = null)
     {
-        $query = User::whereDate('created_at', '>=', $startDate)->whereDate('created_at', '<=', $endDate)->customer()->active();
+        $query = User::customer()->active();
+
+        if ($startDate && $endDate) {
+            $query->whereDate('created_at', '>=', $startDate)->whereDate('created_at', '<=', $endDate);
+        } elseif ($startDate) {
+            $query->whereDate('created_at', $startDate);
+        }
+        // No dates at all: no filter applied, return all-time data.
+
         return $query->count();
     }
 
     // Daily sale
-    public function dayWiseSale()
+    public function dayWiseSale($startDate = null, $endDate = null)
     {
-        $startDate = now()->startOfMonth()->format('Y-m-d 00:00:00');
-        $endDate   = now()->endOfDay()->format('Y-m-d H:i:s');
+        $startDate = $startDate ? $startDate . ' 00:00:00' : now()->startOfMonth()->format('Y-m-d 00:00:00');
+        $endDate   = $endDate ? $endDate . ' 23:59:59' : now()->endOfDay()->format('Y-m-d H:i:s');
 
         return Service::selectRaw("
                     DATE(created_at) as sale_date,
                     COALESCE(SUM(collected_amount), 0) as total_sales
                 ")
+                ->whereNull('deleted_at')
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->groupBy('sale_date')
                 ->orderBy('sale_date', 'desc')
@@ -101,10 +113,10 @@ class DashboardController extends Controller
     }
 
     // Daily CIH Received
-    public function dailyCashInHandReceived()
+    public function dailyCashInHandReceived($startDate = null, $endDate = null)
     {
-        $startDate = now()->startOfMonth()->format('Y-m-d 00:00:00');
-        $endDate   = now()->endOfDay()->format('Y-m-d H:i:s');
+        $startDate = $startDate ? $startDate . ' 00:00:00' : now()->startOfMonth()->format('Y-m-d 00:00:00');
+        $endDate   = $endDate ? $endDate . ' 23:59:59' : now()->endOfDay()->format('Y-m-d H:i:s');
 
         return AmountTransaction::selectRaw("
                     DATE(created_at) as amount_received_date,

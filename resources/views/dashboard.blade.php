@@ -332,17 +332,16 @@
                                     </thead>
                                     <tbody>
                                         @php
-                                            $users = \App\Models\User::where('user_type', 3)
-                                                ->whereHas('user_vehicles', function ($q) {
-                                                    $q->where('service_count', '>', 0);
-                                                })
-                                                ->with(['user_vehicles' => function ($q) {
-                                                    $q->where('service_count', '>', 0); // only load vehicles with services
-                                                }])
-                                                ->withSum(['user_vehicles as total_services' => function ($q) {
-                                                    $q->where('service_count', '>', 0);
-                                                }], 'service_count')
-                                                ->orderByDesc('total_services')
+                                            // Always the overall top 20 by actual service count — never
+                                            // date/year filtered. Counted from the real `services` rows
+                                            // (via the user_vehicles.services hasManyThrough relation),
+                                            // not the denormalized user_vehicles.service_count column,
+                                            // which is unpopulated for legacy-migrated records.
+                                            $users = \App\Models\User::customer()
+                                                ->withCount('services')
+                                                ->having('services_count', '>', 0)
+                                                ->with('user_vehicles.vehicle')
+                                                ->orderByDesc('services_count')
                                                 ->take(20)
                                                 ->get();
                                         @endphp
@@ -358,7 +357,7 @@
                                                         -
                                                     @endif
                                                 </td>
-                                                <td>{{ $user->total_services }}</td>
+                                                <td>{{ $user->services_count }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
