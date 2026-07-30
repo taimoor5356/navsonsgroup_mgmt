@@ -199,7 +199,12 @@
         @if (isset($record) && $vehiclePicPath)
             <img src="{{ asset('storage/' . $vehiclePicPath) }}" class="existing-pic-preview" alt="Current vehicle photo">
         @endif
-        <input type="file" name="vehicle_pic" id="vehicle-pic" class="form-control" accept="image/png,image/jpeg,image/jpg">
+        <div class="input-group">
+            <input type="file" name="vehicle_pic" id="vehicle-pic" class="form-control" accept="image/png,image/jpeg,image/jpg" capture="environment">
+            <button type="button" class="btn btn-outline-primary camera-capture-btn" data-target-input="vehicle-pic" title="Take Photo">
+                <i class="bx bx-camera"></i>
+            </button>
+        </div>
     </div>
 
     <div class="col-12">
@@ -352,7 +357,12 @@
                 @if (isset($record) && $userPicPath)
                     <img src="{{ asset('storage/' . $userPicPath) }}" class="existing-pic-preview" alt="Current photo">
                 @endif
-                <input type="file" name="user_pic" id="user-pic" class="form-control" accept="image/png,image/jpeg,image/jpg">
+                <div class="input-group">
+                    <input type="file" name="user_pic" id="user-pic" class="form-control" accept="image/png,image/jpeg,image/jpg" capture="environment">
+                    <button type="button" class="btn btn-outline-primary camera-capture-btn" data-target-input="user-pic" title="Take Photo">
+                        <i class="bx bx-camera"></i>
+                    </button>
+                </div>
             </div>
             <div class="mb-3 col-md-6 col-12">
                 <label class="form-label" for="cnic-number">CNIC Number</label>
@@ -366,7 +376,12 @@
                 @if (isset($record) && $cnicPicPath)
                     <img src="{{ asset('storage/' . $cnicPicPath) }}" class="existing-pic-preview" alt="Current CNIC photo">
                 @endif
-                <input type="file" name="cnic_pic" id="cnic-pic" class="form-control" accept="image/png,image/jpeg,image/jpg">
+                <div class="input-group">
+                    <input type="file" name="cnic_pic" id="cnic-pic" class="form-control" accept="image/png,image/jpeg,image/jpg" capture="environment">
+                    <button type="button" class="btn btn-outline-primary camera-capture-btn" data-target-input="cnic-pic" title="Take Photo">
+                        <i class="bx bx-camera"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -382,6 +397,29 @@
         </label>
         <div class="input-group">
             <input type="date" name="date" id="date" value="{{ old('date', isset($record) ? \Carbon\Carbon::parse($record->created_at)->format('Y-m-d') : \Carbon\Carbon::now()->format('Y-m-d')) }}" class="form-control hidden-input" required>
+        </div>
+    </div>
+</div>
+
+<!-- Shared camera-capture modal, reused by the vehicle/person/CNIC "Take Photo" buttons -->
+<div class="modal fade" id="camera-capture-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Take Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <video id="camera-video" autoplay playsinline muted style="width:100%; max-height:60vh; background:#000; border-radius:.375rem;"></video>
+                <canvas id="camera-canvas" class="d-none" style="width:100%; max-height:60vh; border-radius:.375rem;"></canvas>
+                <div class="alert alert-danger mt-2 d-none" id="camera-error"></div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-outline-secondary" id="camera-switch-btn"><i class="bx bx-refresh"></i> Switch Camera</button>
+                <button type="button" class="btn btn-primary" id="camera-capture-shot-btn"><i class="bx bx-camera"></i> Capture</button>
+                <button type="button" class="btn btn-outline-secondary d-none" id="camera-retake-btn">Retake</button>
+                <button type="button" class="btn btn-success d-none" id="camera-use-photo-btn">Use Photo</button>
+            </div>
         </div>
     </div>
 </div>
@@ -414,6 +452,114 @@
             } else {
                 $input.before('<img src="' + src + '" class="existing-pic-preview" alt="Current photo">');
             }
+        }
+
+        // ------------------------------------------------------------------
+        // In-page camera capture: lets staff take a photo directly (vehicle,
+        // person, CNIC) instead of only picking an existing file. Falls back
+        // silently to the plain file input (with its native `capture`
+        // attribute) when getUserMedia isn't available — e.g. non-HTTPS
+        // origins or browsers without camera support.
+        // ------------------------------------------------------------------
+        var cameraSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        if (!cameraSupported) {
+            $('.camera-capture-btn').addClass('d-none');
+        } else {
+            var cameraStream = null;
+            var cameraTargetInputId = null;
+            var cameraFacingMode = 'environment';
+
+            function setLocalPreview(inputSelector, blobUrl) {
+                var $input = $(inputSelector);
+                var $existing = $input.prev('img.existing-pic-preview');
+                if ($existing.length) {
+                    $existing.attr('src', blobUrl);
+                } else {
+                    $input.before('<img src="' + blobUrl + '" class="existing-pic-preview" alt="Captured photo">');
+                }
+            }
+
+            function stopCameraStream() {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(function (track) { track.stop(); });
+                    cameraStream = null;
+                }
+            }
+
+            function resetCameraModalButtons() {
+                $('#camera-video').removeClass('d-none');
+                $('#camera-canvas').addClass('d-none');
+                $('#camera-capture-shot-btn').removeClass('d-none');
+                $('#camera-retake-btn, #camera-use-photo-btn').addClass('d-none');
+            }
+
+            function startCamera() {
+                var video = document.getElementById('camera-video');
+                $('#camera-error').addClass('d-none').text('');
+                stopCameraStream();
+                resetCameraModalButtons();
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraFacingMode }, audio: false })
+                    .then(function (stream) {
+                        cameraStream = stream;
+                        video.srcObject = stream;
+                    })
+                    .catch(function (err) {
+                        $('#camera-error').removeClass('d-none').text('Could not access camera: ' + err.message);
+                    });
+            }
+
+            $(document).on('click', '.camera-capture-btn', function () {
+                cameraTargetInputId = $(this).data('target-input');
+                cameraFacingMode = 'environment';
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('camera-capture-modal')).show();
+                startCamera();
+            });
+
+            $('#camera-capture-modal').on('hidden.bs.modal', function () {
+                stopCameraStream();
+            });
+
+            $(document).on('click', '#camera-switch-btn', function () {
+                cameraFacingMode = cameraFacingMode === 'environment' ? 'user' : 'environment';
+                startCamera();
+            });
+
+            $(document).on('click', '#camera-capture-shot-btn', function () {
+                var video = document.getElementById('camera-video');
+                var canvas = document.getElementById('camera-canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                $('#camera-video').addClass('d-none');
+                $('#camera-canvas').removeClass('d-none');
+                $('#camera-capture-shot-btn').addClass('d-none');
+                $('#camera-retake-btn, #camera-use-photo-btn').removeClass('d-none');
+            });
+
+            $(document).on('click', '#camera-retake-btn', function () {
+                startCamera();
+            });
+
+            $(document).on('click', '#camera-use-photo-btn', function () {
+                var canvas = document.getElementById('camera-canvas');
+                canvas.toBlob(function (blob) {
+                    if (!blob || !cameraTargetInputId) {
+                        return;
+                    }
+                    var file = new File([blob], 'photo-' + Date.now() + '.jpg', { type: 'image/jpeg' });
+                    var dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+
+                    var input = document.getElementById(cameraTargetInputId);
+                    input.files = dataTransfer.files;
+
+                    setLocalPreview('#' + cameraTargetInputId, URL.createObjectURL(blob));
+
+                    stopCameraStream();
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('camera-capture-modal')).hide();
+                }, 'image/jpeg', 0.9);
+            });
         }
 
         function clamp(value, min, max) {
