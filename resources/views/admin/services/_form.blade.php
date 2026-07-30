@@ -455,6 +455,19 @@
             }
         }
 
+        // Registration-number search reloads photo previews from whatever is
+        // stored server-side for that record — but if staff already captured/
+        // chose a photo locally (the file input already has a file queued) in
+        // this session, that's not something the search response knows about
+        // or is "linked" to, so it must never clear or replace it.
+        function updatePicFromSearch(inputSelector, path) {
+            var input = document.querySelector(inputSelector);
+            if (input && input.files && input.files.length > 0) {
+                return;
+            }
+            showExistingPic(inputSelector, path);
+        }
+
         // ------------------------------------------------------------------
         // Auto-read the registration number off the Vehicle Photo using
         // Tesseract.js — free, open-source OCR that runs entirely client-side
@@ -930,9 +943,9 @@
                             $('#color').val(response.data.color || '');
                             $('#model-year').val(response.data.model_year || '');
                             $('#cnic-number').val(response.data.cnic_number || '');
-                            showExistingPic('#vehicle-pic', response.data.vehicle_pic);
-                            showExistingPic('#user-pic', response.data.user_pic);
-                            showExistingPic('#cnic-pic', response.data.cnic_pic);
+                            updatePicFromSearch('#vehicle-pic', response.data.vehicle_pic);
+                            updatePicFromSearch('#user-pic', response.data.user_pic);
+                            updatePicFromSearch('#cnic-pic', response.data.cnic_pic);
                         }
                         $('.hidden-input').attr('readonly', false);
                         if ((response.status == false) && (response.msg == 'already_serviced')) {
