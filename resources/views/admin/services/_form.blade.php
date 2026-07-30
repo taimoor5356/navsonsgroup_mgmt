@@ -485,14 +485,64 @@
             return tesseractLoadPromise;
         }
 
+        // A plain photo of the whole vehicle has the plate as a small part of a
+        // much noisier scene (chrome trim, reflections, other badges/text), so
+        // Tesseract's document-oriented defaults read it poorly. Configuring
+        // the worker explicitly makes a real difference:
+        //  - PSM 11 ("sparse text") looks for isolated text anywhere in the
+        //    frame instead of assuming a structured page layout.
+        //  - A character whitelist stops it from ever guessing symbols/lowercase
+        //    letters that a plate would never contain, which cuts out a lot of
+        //    noise picked up from the rest of the photo.
+        // The worker is created once and reused for subsequent scans.
+        var tesseractWorkerPromise = null;
+
+        function getTesseractWorker() {
+            if (!tesseractWorkerPromise) {
+                tesseractWorkerPromise = loadTesseract()
+                    .then(function () {
+                        return Tesseract.createWorker('eng');
+                    })
+                    .then(function (worker) {
+                        return worker.setParameters({
+                            tessedit_pageseg_mode: '11', // PSM.SPARSE_TEXT
+                            tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -.'
+                        }).then(function () {
+                            return worker;
+                        });
+                    });
+            }
+            return tesseractWorkerPromise;
+        }
+
         function extractPlateGuess(rawText) {
-            var text = (rawText || '').toUpperCase().replace(/[^A-Z0-9\s-]/g, ' ');
-            // Pakistani-style plates: 2-3 letters + 2-4 digits, e.g. "ABC-123", "LEA 1234".
-            var match = text.match(/\b([A-Z]{2,3})[\s-]?(\d{2,4})\b/);
-            if (!match) {
+            // Some Pakistani plates use a decorative "." between the letters and
+            // digits (e.g. "RIW . 1392") — drop it before matching so it doesn't
+            // break the pattern.
+            var text = (rawText || '').toUpperCase().replace(/\./g, ' ').replace(/[^A-Z0-9\s-]/g, ' ');
+            var candidates = [];
+            var m;
+
+            var letterFirstRe = /([A-Z]{2,3})[\s-]*(\d{2,4})/g;
+            while ((m = letterFirstRe.exec(text)) !== null) {
+                candidates.push(m[1] + '-' + m[2]);
+            }
+
+            var digitFirstRe = /(\d{2,4})[\s-]*([A-Z]{2,3})/g;
+            while ((m = digitFirstRe.exec(text)) !== null) {
+                candidates.push(m[2] + '-' + m[1]);
+            }
+
+            if (!candidates.length) {
                 return null;
             }
-            return match[1] + '-' + match[2];
+
+            // Prefer the longest combined letters+digits match — more specific,
+            // less likely to be an incidental noise match elsewhere in the photo.
+            candidates.sort(function (a, b) {
+                return b.replace('-', '').length - a.replace('-', '').length;
+            });
+            return candidates[0];
         }
 
         function runPlateOcr(fileOrBlob) {
@@ -504,11 +554,11 @@
                 return;
             }
 
-            $status.removeClass('d-none text-danger').addClass('text-muted').text('Reading registration number from photo...');
+            $status.removeClass('d-none text-danger text-success').addClass('text-muted').text('Reading registration number from photo...');
 
-            loadTesseract()
-                .then(function () {
-                    return Tesseract.recognize(fileOrBlob, 'eng');
+            getTesseractWorker()
+                .then(function (worker) {
+                    return worker.recognize(fileOrBlob);
                 })
                 .then(function (result) {
                     var guess = extractPlateGuess(result?.data?.text);
