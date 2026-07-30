@@ -205,6 +205,7 @@
                 <i class="bx bx-camera"></i>
             </button>
         </div>
+        <small class="text-muted d-none" id="plate-ocr-status"></small>
     </div>
 
     <div class="col-12">
@@ -455,6 +456,84 @@
         }
 
         // ------------------------------------------------------------------
+        // Auto-read the registration number off the Vehicle Photo using
+        // Tesseract.js — free, open-source OCR that runs entirely client-side
+        // (WASM in the browser), so it costs nothing and needs no server-side
+        // OCR service or binary (this host's shared hosting can't run one
+        // anyway). Loaded lazily from a CDN only once a vehicle photo is
+        // actually supplied, since the library is a multi-MB download.
+        // Accuracy is best-effort: it only fills the field if it isn't
+        // already filled, and staff should always verify/correct the result
+        // rather than trust it blindly — a whole-vehicle photo is a much
+        // harder OCR target than a cropped plate close-up.
+        // ------------------------------------------------------------------
+        var tesseractLoadPromise = null;
+
+        function loadTesseract() {
+            if (window.Tesseract) {
+                return Promise.resolve();
+            }
+            if (!tesseractLoadPromise) {
+                tesseractLoadPromise = new Promise(function (resolve, reject) {
+                    var script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
+            return tesseractLoadPromise;
+        }
+
+        function extractPlateGuess(rawText) {
+            var text = (rawText || '').toUpperCase().replace(/[^A-Z0-9\s-]/g, ' ');
+            // Pakistani-style plates: 2-3 letters + 2-4 digits, e.g. "ABC-123", "LEA 1234".
+            var match = text.match(/\b([A-Z]{2,3})[\s-]?(\d{2,4})\b/);
+            if (!match) {
+                return null;
+            }
+            return match[1] + '-' + match[2];
+        }
+
+        function runPlateOcr(fileOrBlob) {
+            var $status = $('#plate-ocr-status');
+            var $regNumber = $('#vehicle-registration-number');
+
+            // Never overwrite something staff already typed/confirmed.
+            if ($regNumber.val()) {
+                return;
+            }
+
+            $status.removeClass('d-none text-danger').addClass('text-muted').text('Reading registration number from photo...');
+
+            loadTesseract()
+                .then(function () {
+                    return Tesseract.recognize(fileOrBlob, 'eng');
+                })
+                .then(function (result) {
+                    var guess = extractPlateGuess(result?.data?.text);
+                    if (guess && !$regNumber.val()) {
+                        $regNumber.val(guess);
+                        $status.removeClass('text-muted').addClass('text-success')
+                            .text('Detected "' + guess + '" from photo — please verify.');
+                    } else {
+                        $status.removeClass('text-muted').addClass('text-danger')
+                            .text('Could not read the plate clearly — please enter it manually.');
+                    }
+                })
+                .catch(function () {
+                    $status.removeClass('text-muted').addClass('text-danger')
+                        .text('Plate scanning unavailable right now — please enter it manually.');
+                });
+        }
+
+        $(document).on('change', '#vehicle-pic', function () {
+            if (this.files && this.files[0]) {
+                runPlateOcr(this.files[0]);
+            }
+        });
+
+        // ------------------------------------------------------------------
         // In-page camera capture: lets staff take a photo directly (vehicle,
         // person, CNIC) instead of only picking an existing file. Falls back
         // silently to the plain file input (with its native `capture`
@@ -555,6 +634,10 @@
                     input.files = dataTransfer.files;
 
                     setLocalPreview('#' + cameraTargetInputId, URL.createObjectURL(blob));
+
+                    if (cameraTargetInputId === 'vehicle-pic') {
+                        runPlateOcr(blob);
+                    }
 
                     stopCameraStream();
                     bootstrap.Modal.getOrCreateInstance(document.getElementById('camera-capture-modal')).hide();
