@@ -536,12 +536,14 @@
             var candidates = [];
             var m;
 
-            var letterFirstRe = /([A-Z]{2,3})[\s-]*(\d{2,4})/g;
+            // Letters and digits can each be 1-4 characters (e.g. "A-3", "AA-55",
+            // "AAAA-4344") — don't assume a fixed 2-3/2-4 length.
+            var letterFirstRe = /([A-Z]{1,4})[\s-]*(\d{1,4})/g;
             while ((m = letterFirstRe.exec(text)) !== null) {
                 candidates.push(m[1] + '-' + m[2]);
             }
 
-            var digitFirstRe = /(\d{2,4})[\s-]*([A-Z]{2,3})/g;
+            var digitFirstRe = /(\d{1,4})[\s-]*([A-Z]{1,4})/g;
             while ((m = digitFirstRe.exec(text)) !== null) {
                 candidates.push(m[2] + '-' + m[1]);
             }
@@ -579,6 +581,9 @@
                         $regNumber.val(guess);
                         $status.removeClass('text-muted').addClass('text-success')
                             .text('Detected "' + guess + '" from photo — please verify.');
+                        // Same as typing the number in and clicking Search: pull in
+                        // any existing customer/vehicle record for it automatically.
+                        $('#search-vehicle').trigger('click');
                     } else {
                         $status.removeClass('text-muted').addClass('text-danger')
                             .text('Could not read the plate clearly — please enter it manually.');
